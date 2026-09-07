@@ -1,0 +1,535 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ----------------------------------------------------
+   Modern Soft Design System & Smooth Micro-Animations
+   ---------------------------------------------------- */
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+        @apply bg-slate-50/80 text-slate-700 antialiased selection:bg-emerald-100 selection:text-emerald-900;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Soft Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: rgba(241, 245, 249, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+        background: rgba(203, 213, 225, 0.8);
+        border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(148, 163, 184, 0.9);
+    }
+
+    /* Modern Inputs */
+    input, select, textarea {
+        @apply rounded-xl border-slate-200/80 bg-white/90 shadow-sm transition-all duration-200 placeholder:text-slate-400 focus:bg-white focus:ring-4;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: var(--theme-primary, #059669) !important;
+        --tw-ring-color: var(--theme-glow, rgba(16, 185, 129, 0.25)) !important;
+    }
+
+    /* Click feedback animation for interactive elements */
+    button, 
+    a, 
+    input[type="submit"], 
+    input[type="button"], 
+    input[type="checkbox"], 
+    input[type="radio"], 
+    .btn, 
+    [role="button"] {
+        @apply transition-all duration-200 ease-out;
+    }
+
+    button:active, 
+    a.rounded-lg:active, 
+    a.rounded-xl:active, 
+    a.rounded-2xl:active, 
+    .btn:active, 
+    input[type="submit"]:active {
+        transform: scale(0.97);
+    }
+}
+
+/* Keyframes */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@layer components {
+    /* Section Entrance Animations */
+    main > div, 
+    main section, 
+    .animate-fade-up {
+        animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    /* Stagger grid items */
+    .grid > div:nth-child(1) { animation-delay: 0.04s; }
+    .grid > div:nth-child(2) { animation-delay: 0.08s; }
+    .grid > div:nth-child(3) { animation-delay: 0.12s; }
+    .grid > div:nth-child(4) { animation-delay: 0.16s; }
+    .grid > div:nth-child(5) { animation-delay: 0.20s; }
+    .grid > div:nth-child(6) { animation-delay: 0.24s; }
+
+    /* Modern Card Glassmorphism & Soft Colors */
+    main .bg-white {
+        @apply border border-slate-200/60 shadow-sm shadow-slate-200/40 backdrop-blur-sm transition-all duration-200;
+    }
+
+    main .bg-white.rounded-xl, 
+    main .bg-white.rounded-2xl, 
+    main .rounded-xl.bg-white, 
+    main .rounded-2xl.bg-white {
+        @apply border border-slate-200/60 shadow-sm shadow-slate-200/40 hover:shadow-md hover:shadow-slate-300/30;
+    }
+
+    /* Table styling improvements */
+    main table {
+        @apply w-full text-left text-sm border-separate border-spacing-0;
+    }
+    main table thead tr {
+        @apply bg-slate-100/70 text-xs font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-200/80;
+    }
+    main table th {
+        @apply px-4 py-3.5 font-semibold text-slate-600;
+    }
+    main table tbody tr {
+        @apply border-b border-slate-100 transition-colors duration-150 hover:bg-slate-50;
+    }
+    main table td {
+        @apply px-4 py-3.5 align-middle;
+    }
+
+    .bg-red-700, 
+    .bg-red-600,
+    main .bg-red-700 {
+        @apply bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white shadow-sm shadow-rose-600/20 hover:shadow-md hover:shadow-rose-600/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97];
+    }
+
+    .bg-slate-800,
+    main .bg-slate-800 {
+        @apply bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white shadow-sm shadow-slate-800/20 hover:shadow-md hover:shadow-slate-800/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97];
+    }
+
+    /* Soft Accent Cards */
+    .bg-red-50 {
+        @apply bg-rose-50/70 border border-rose-200/60 text-rose-900;
+    }
+    .bg-orange-50 {
+        @apply bg-amber-50/70 border border-amber-200/60 text-amber-900;
+    }
+    .bg-sky-50 {
+        @apply bg-sky-50/70 border border-sky-200/60 text-sky-900;
+    }
+
+    /* Modal Backdrop Glass Effect */
+    .fixed.inset-0.bg-black\/40,
+    .fixed.inset-0.bg-black\/50,
+    .fixed.inset-0.bg-black\/60,
+    .fixed.inset-0.bg-black\/65 {
+        @apply backdrop-blur-md bg-slate-950/40 transition-all duration-300;
+    }
+
+    /* Modals popup animation */
+    [id$="modal"] > div,
+    [id$="Modal"] > div {
+        animation: fadeInScale 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+.animate-spin,
+.spinning {
+    animation: spin 0.8s linear infinite !important;
+}
+
+/* ----------------------------------------------------
+   Dynamic Themes System (Active Color Variable Overrides)
+   ---------------------------------------------------- */
+:root {
+    --theme-primary: #059669;
+    --theme-primary-hover: #047857;
+    --theme-secondary: #0d9488;
+    --theme-accent: #10b981;
+    --theme-glow: rgba(16, 185, 129, 0.4);
+    --theme-gradient: linear-gradient(135deg, #059669 0%, #0d9488 60%, #047857 100%);
+    --theme-btn-gradient: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+    --theme-badge-bg: #ecfdf5;
+    --theme-badge-text: #065f46;
+    --theme-badge-border: #a7f3d0;
+    --theme-bg-glow: rgba(16, 185, 129, 0.18);
+}
+
+/* Specific Theme Definitions */
+html[data-theme="emerald"] {
+    --theme-primary: #059669;
+    --theme-primary-hover: #047857;
+    --theme-secondary: #0d9488;
+    --theme-accent: #10b981;
+    --theme-glow: rgba(16, 185, 129, 0.4);
+    --theme-gradient: linear-gradient(135deg, #059669 0%, #0d9488 60%, #047857 100%);
+    --theme-btn-gradient: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+    --theme-badge-bg: #ecfdf5;
+    --theme-badge-text: #065f46;
+    --theme-badge-border: #a7f3d0;
+    --theme-bg-glow: rgba(16, 185, 129, 0.18);
+}
+html[data-theme="emerald"].dark {
+    --theme-badge-bg: rgba(16, 185, 129, 0.18);
+    --theme-badge-text: #6ee7b7;
+    --theme-badge-border: rgba(16, 185, 129, 0.35);
+    --theme-bg-glow: rgba(16, 185, 129, 0.12);
+}
+
+html[data-theme="ocean"] {
+    --theme-primary: #2563eb;
+    --theme-primary-hover: #1d4ed8;
+    --theme-secondary: #0284c7;
+    --theme-accent: #38bdf8;
+    --theme-glow: rgba(37, 99, 235, 0.4);
+    --theme-gradient: linear-gradient(135deg, #2563eb 0%, #0284c7 60%, #1d4ed8 100%);
+    --theme-btn-gradient: linear-gradient(135deg, #2563eb 0%, #0284c7 100%);
+    --theme-badge-bg: #eff6ff;
+    --theme-badge-text: #1e40af;
+    --theme-badge-border: #bfdbfe;
+    --theme-bg-glow: rgba(37, 99, 235, 0.18);
+}
+html[data-theme="ocean"].dark {
+    --theme-badge-bg: rgba(37, 99, 235, 0.18);
+    --theme-badge-text: #93c5fd;
+    --theme-badge-border: rgba(37, 99, 235, 0.35);
+    --theme-bg-glow: rgba(37, 99, 235, 0.12);
+}
+
+html[data-theme="amethyst"] {
+    --theme-primary: #7c3aed;
+    --theme-primary-hover: #6d28d9;
+    --theme-secondary: #9333ea;
+    --theme-accent: #c084fc;
+    --theme-glow: rgba(124, 58, 237, 0.4);
+    --theme-gradient: linear-gradient(135deg, #7c3aed 0%, #9333ea 60%, #6d28d9 100%);
+    --theme-btn-gradient: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+    --theme-badge-bg: #faf5ff;
+    --theme-badge-text: #5b21b6;
+    --theme-badge-border: #e9d5ff;
+    --theme-bg-glow: rgba(124, 58, 237, 0.18);
+}
+html[data-theme="amethyst"].dark {
+    --theme-badge-bg: rgba(124, 58, 237, 0.18);
+    --theme-badge-text: #d8b4fe;
+    --theme-badge-border: rgba(124, 58, 237, 0.35);
+    --theme-bg-glow: rgba(124, 58, 237, 0.12);
+}
+
+html[data-theme="sunset"] {
+    --theme-primary: #ea580c;
+    --theme-primary-hover: #c2410c;
+    --theme-secondary: #e11d48;
+    --theme-accent: #fb923c;
+    --theme-glow: rgba(234, 88, 12, 0.4);
+    --theme-gradient: linear-gradient(135deg, #ea580c 0%, #e11d48 60%, #c2410c 100%);
+    --theme-btn-gradient: linear-gradient(135deg, #ea580c 0%, #e11d48 100%);
+    --theme-badge-bg: #fff7ed;
+    --theme-badge-text: #9a3412;
+    --theme-badge-border: #fed7aa;
+    --theme-bg-glow: rgba(234, 88, 12, 0.18);
+}
+html[data-theme="sunset"].dark {
+    --theme-badge-bg: rgba(234, 88, 12, 0.18);
+    --theme-badge-text: #fed7aa;
+    --theme-badge-border: rgba(234, 88, 12, 0.35);
+    --theme-bg-glow: rgba(234, 88, 12, 0.12);
+}
+
+html[data-theme="cyber"] {
+    --theme-primary: #0891b2;
+    --theme-primary-hover: #0e7490;
+    --theme-secondary: #059669;
+    --theme-accent: #06b6d4;
+    --theme-glow: rgba(6, 182, 212, 0.4);
+    --theme-gradient: linear-gradient(135deg, #0891b2 0%, #059669 60%, #0e7490 100%);
+    --theme-btn-gradient: linear-gradient(135deg, #0891b2 0%, #059669 100%);
+    --theme-badge-bg: #ecfeff;
+    --theme-badge-text: #155e75;
+    --theme-badge-border: #a5f3fc;
+    --theme-bg-glow: rgba(6, 182, 212, 0.18);
+}
+html[data-theme="cyber"].dark {
+    --theme-badge-bg: rgba(6, 182, 212, 0.18);
+    --theme-badge-text: #a5f3fc;
+    --theme-badge-border: rgba(6, 182, 212, 0.35);
+    --theme-bg-glow: rgba(6, 182, 212, 0.12);
+}
+
+/* 1. Dynamic Background Wrapper */
+#app-main-wrapper {
+    background: radial-gradient(ellipse at top, var(--theme-bg-glow) 0%, rgba(248, 250, 252, 0.92) 50%, #f1f5f9 100%) !important;
+    transition: background 0.4s ease;
+}
+html.dark #app-main-wrapper {
+    background: radial-gradient(ellipse at top, var(--theme-bg-glow) 0%, rgba(15, 23, 42, 0.96) 55%, #030712 100%) !important;
+}
+
+/* 2. Dynamic Text Accents */
+.text-emerald-800,
+.text-emerald-700,
+.text-emerald-600 {
+    color: var(--theme-primary) !important;
+    transition: color 0.3s ease;
+}
+.text-emerald-500,
+.text-emerald-400 {
+    color: var(--theme-accent) !important;
+    transition: color 0.3s ease;
+}
+
+/* 3. Dynamic Primary Buttons & Gradients */
+.bg-emerald-600,
+.bg-emerald-700,
+.bg-emerald-800,
+main .bg-emerald-600,
+main .bg-emerald-700,
+main .bg-emerald-800,
+button.bg-emerald-600,
+button.bg-emerald-700,
+a.bg-emerald-600,
+a.bg-emerald-700,
+.theme-btn-gradient {
+    background: var(--theme-btn-gradient) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 14px -3px var(--theme-glow);
+}
+.bg-emerald-600:hover,
+.bg-emerald-700:hover,
+.bg-emerald-800:hover,
+main .bg-emerald-600:hover,
+main .bg-emerald-700:hover,
+main .bg-emerald-800:hover,
+button.bg-emerald-600:hover,
+button.bg-emerald-700:hover,
+a.bg-emerald-600:hover,
+a.bg-emerald-700:hover,
+.theme-btn-gradient:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 8px 22px -3px var(--theme-glow);
+}
+
+/* 4. Dynamic Hero Cards Gradients */
+.from-emerald-600.to-teal-700,
+.from-emerald-600.to-teal-600,
+.from-emerald-500.to-teal-600,
+.from-emerald-600 {
+    --tw-gradient-from: transparent !important;
+    --tw-gradient-to: transparent !important;
+    background-image: var(--theme-gradient) !important;
+    box-shadow: 0 10px 25px -5px var(--theme-glow);
+    transition: all 0.3s ease;
+}
+
+/* 5. Dynamic Live Dot / Pulse */
+.bg-emerald-500 {
+    background-color: var(--theme-accent) !important;
+    transition: background-color 0.3s ease;
+}
+
+/* 6. Dynamic Badges, Pills & Active Navigation Links */
+.bg-emerald-50,
+.bg-emerald-100 {
+    background-color: var(--theme-badge-bg) !important;
+    color: var(--theme-badge-text) !important;
+    border-color: var(--theme-badge-border) !important;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* 7. Dynamic Borders & Rings */
+.border-emerald-100,
+.border-emerald-200,
+.border-emerald-300 {
+    border-color: var(--theme-badge-border) !important;
+    transition: border-color 0.3s ease;
+}
+.ring-emerald-200,
+.ring-emerald-300 {
+    --tw-ring-color: var(--theme-badge-border) !important;
+}
+
+/* 8. Dynamic Hover States */
+.hover\:bg-emerald-50:hover {
+    background-color: var(--theme-badge-bg) !important;
+}
+/* 9. Dynamic Dark Mode Badges & Rings */
+html.dark .bg-emerald-950,
+html.dark .bg-emerald-950\/60,
+html.dark .dark\:bg-emerald-950,
+html.dark .dark\:bg-emerald-950\/60 {
+    background-color: var(--theme-badge-bg) !important;
+}
+
+html.dark .text-emerald-300,
+html.dark .dark\:text-emerald-300 {
+    color: var(--theme-accent) !important;
+}
+
+html.dark .dark\:ring-emerald-700,
+html.dark .ring-emerald-700 {
+    --tw-ring-color: var(--theme-badge-border) !important;
+}
+
+/* ----------------------------------------------------
+   Full App Dark Mode Overrides
+   ---------------------------------------------------- */
+html.dark {
+    color-scheme: dark;
+}
+
+html.dark body {
+    background-color: #0b1120 !important;
+    color: #f1f5f9 !important;
+}
+
+html.dark nav {
+    background-color: rgba(15, 23, 42, 0.9) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark header.sticky {
+    background-color: rgba(15, 23, 42, 0.85) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html.dark header.sticky h2 {
+    color: #f8fafc !important;
+}
+
+html.dark main .bg-white,
+html.dark .bg-white.rounded-xl,
+html.dark .bg-white.rounded-2xl,
+html.dark .rounded-xl.bg-white,
+html.dark .rounded-2xl.bg-white {
+    background-color: rgba(15, 23, 42, 0.82) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5) !important;
+    color: #f1f5f9 !important;
+}
+
+html.dark .text-slate-800,
+html.dark .text-slate-900,
+html.dark .text-gray-900,
+html.dark .text-gray-800 {
+    color: #f8fafc !important;
+}
+html.dark .text-slate-700,
+html.dark .text-gray-700 {
+    color: #e2e8f0 !important;
+}
+html.dark .text-slate-600,
+html.dark .text-gray-600 {
+    color: #94a3b8 !important;
+}
+html.dark .text-slate-500,
+html.dark .text-gray-500 {
+    color: #64748b !important;
+}
+
+html.dark .bg-slate-50,
+html.dark .bg-slate-100,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100 {
+    background-color: rgba(30, 41, 59, 0.5) !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+    background-color: rgba(15, 23, 42, 0.75) !important;
+    border-color: rgba(255, 255, 255, 0.14) !important;
+    color: #f8fafc !important;
+}
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+    color: #64748b !important;
+}
+
+html.dark main table thead tr {
+    background-color: rgba(30, 41, 59, 0.75) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html.dark main table th {
+    color: #cbd5e1 !important;
+}
+html.dark main table tbody tr {
+    border-color: rgba(255, 255, 255, 0.05) !important;
+}
+html.dark main table tbody tr:hover {
+    background-color: rgba(30, 41, 59, 0.35) !important;
+}
+html.dark main table td {
+    color: #e2e8f0 !important;
+}
+
+html.dark [id$="modal"] > div,
+html.dark [id$="Modal"] > div {
+    background-color: #0f172a !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    color: #f8fafc !important;
+}
+
+html.dark .bg-rose-50,
+html.dark .bg-red-50 {
+    background-color: rgba(136, 19, 55, 0.32) !important;
+    border-color: rgba(244, 63, 94, 0.25) !important;
+    color: #fda4af !important;
+}
+html.dark .bg-sky-50 {
+    background-color: rgba(12, 74, 110, 0.35) !important;
+    border-color: rgba(14, 165, 233, 0.25) !important;
+    color: #7dd3fc !important;
+}
+html.dark .bg-amber-50,
+html.dark .bg-orange-50 {
+    background-color: rgba(120, 53, 15, 0.35) !important;
+    border-color: rgba(245, 158, 11, 0.25) !important;
+    color: #fde68a !important;
+}
