@@ -180,12 +180,8 @@
         const submitBtn = document.getElementById('submit-login-btn');
         const btnText = document.getElementById('btn-text');
         const btnSpinner = document.getElementById('btn-spinner');
-        let deviceDetailsReady = false;
 
-        loginForm.addEventListener('submit', async event => {
-            if (deviceDetailsReady) return;
-            event.preventDefault();
-
+        loginForm.addEventListener('submit', async () => {
             // Visual feedback
             submitBtn.disabled = true;
             btnText.classList.add('hidden');
@@ -195,21 +191,36 @@
             let platform = navigator.userAgentData?.platform || navigator.platform || '';
             let model = '';
             let browser = '';
+
             try {
                 if (navigator.userAgentData?.getHighEntropyValues) {
-                    const details = await navigator.userAgentData.getHighEntropyValues(['model', 'platform']);
+                    const details = await navigator.userAgentData.getHighEntropyValues([
+                        'model',
+                        'platform'
+                    ]);
+
                     model = details.model || '';
                     platform = details.platform || platform;
-                    const brands = (navigator.userAgentData.brands || []).map(item => item.brand);
-                    browser = brands.find(brand => /Microsoft Edge|Google Chrome|Opera|Samsung Internet|Firefox/i.test(brand)) || brands.find(brand => !/not.*brand|chromium/i.test(brand)) || '';
+
+                    const brands = (navigator.userAgentData.brands || [])
+                        .map(item => item.brand);
+
+                    browser =
+                        brands.find(brand =>
+                            /Microsoft Edge|Google Chrome|Opera|Samsung Internet|Firefox/i.test(brand)
+                        ) ||
+                        brands.find(brand =>
+                            !/not.*brand|chromium/i.test(brand)
+                        ) ||
+                        '';
                 }
-            } catch (error) {}
+            } catch (error) {
+                // Device information is optional; never block login.
+            }
 
             document.getElementById('device-model').value = model;
             document.getElementById('device-platform').value = platform;
             document.getElementById('device-browser').value = browser;
-            deviceDetailsReady = true;
-            loginForm.requestSubmit();
         });
     </script>
 
