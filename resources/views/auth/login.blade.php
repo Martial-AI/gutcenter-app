@@ -176,52 +176,52 @@
         }
 
         // Handle device platform / browser resolution & submit feedback
-        const loginForm = document.getElementById('login-form');
-        const submitBtn = document.getElementById('submit-login-btn');
-        const btnText = document.getElementById('btn-text');
-        const btnSpinner = document.getElementById('btn-spinner');
+const loginForm = document.getElementById('login-form');
+const submitBtn = document.getElementById('submit-login-btn');
+const btnText = document.getElementById('btn-text');
+const btnSpinner = document.getElementById('btn-spinner');
 
-        loginForm.addEventListener('submit', async () => {
-            // Visual feedback
-            submitBtn.disabled = true;
-            btnText.classList.add('hidden');
-            btnSpinner.classList.remove('hidden');
-            btnSpinner.classList.add('flex');
+loginForm.addEventListener('submit', async () => {
+    // Visual feedback
+    submitBtn.disabled = true;
+    btnText.classList.add('hidden');
+    btnSpinner.classList.remove('hidden');
+    btnSpinner.classList.add('flex');
 
-            let platform = navigator.userAgentData?.platform || navigator.platform || '';
-            let model = '';
-            let browser = '';
+    let platform = navigator.userAgentData?.platform || navigator.platform || '';
+    let model = '';
+    let browser = '';
 
-            try {
-                if (navigator.userAgentData?.getHighEntropyValues) {
-                    const details = await navigator.userAgentData.getHighEntropyValues([
-                        'model',
-                        'platform'
-                    ]);
+    try {
+        if (navigator.userAgentData?.getHighEntropyValues) {
+            const details = await navigator.userAgentData.getHighEntropyValues([
+                'model',
+                'platform'
+            ]);
 
-                    model = details.model || '';
-                    platform = details.platform || platform;
+            model = details.model || '';
+            platform = details.platform || platform;
 
-                    const brands = (navigator.userAgentData.brands || [])
-                        .map(item => item.brand);
+            const brands = (navigator.userAgentData.brands || [])
+                .map(item => item.brand);
 
-                    browser =
-                        brands.find(brand =>
-                            /Microsoft Edge|Google Chrome|Opera|Samsung Internet|Firefox/i.test(brand)
-                        ) ||
-                        brands.find(brand =>
-                            !/not.*brand|chromium/i.test(brand)
-                        ) ||
-                        '';
-                }
-            } catch (error) {
-                // Device information is optional; never block login.
-            }
+            browser =
+                brands.find(brand =>
+                    /Microsoft Edge|Google Chrome|Opera|Samsung Internet|Firefox/i.test(brand)
+                ) ||
+                brands.find(brand =>
+                    !/not.*brand|chromium/i.test(brand)
+                ) ||
+                '';
+        }
+    } catch (error) {
+        // Device information is optional; never block login.
+    }
 
-            document.getElementById('device-model').value = model;
-            document.getElementById('device-platform').value = platform;
-            document.getElementById('device-browser').value = browser;
-        });
+    document.getElementById('device-model').value = model;
+    document.getElementById('device-platform').value = platform;
+    document.getElementById('device-browser').value = browser;
+}); 
     </script>
 
     <!-- Pending Login Approval Modal -->
