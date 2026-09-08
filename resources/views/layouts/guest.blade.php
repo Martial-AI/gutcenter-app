@@ -384,22 +384,26 @@
             };
 
             function toggleThemeDropdown(forceState = null) {
-                const menu = document.getElementById('theme-dropdown-menu');
-                const chevron = document.getElementById('theme-chevron');
-                const isClosed = menu.classList.contains('hidden');
-                const shouldOpen = forceState !== null ? forceState : isClosed;
+ 		   const menu = document.getElementById('theme-dropdown-menu');
+    		const chevron = document.getElementById('theme-chevron');
 
-                if (shouldOpen) {
-                    menu.classList.remove('hidden');
-                    chevron.classList.add('rotate-180');
-                    // Close language dropdown if open
-                    document.getElementById('guest-lang-dropdown')?.classList.add('hidden');
-                    document.getElementById('lang-chevron')?.classList.remove('rotate-180');
-                } else {
-                    menu.classList.add('hidden');
-                    chevron.classList.remove('rotate-180');
-                }
-            }
+    if (!menu) return;
+
+    	const isClosed = menu.classList.contains('hidden');
+    	const shouldOpen = forceState !== null ? forceState : isClosed;
+
+    if (shouldOpen) {
+        menu.classList.remove('hidden');
+        chevron?.classList.add('rotate-180');
+
+        // Close language dropdown if open
+        document.getElementById('guest-lang-dropdown')?.classList.add('hidden');
+        document.getElementById('lang-chevron')?.classList.remove('rotate-180');
+    } else {
+        menu.classList.add('hidden');
+        chevron?.classList.remove('rotate-180');
+    }
+}
 
             function toggleLanguageDropdown() {
                 const menu = document.getElementById('guest-lang-dropdown');
