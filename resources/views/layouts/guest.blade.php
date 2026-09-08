@@ -203,85 +203,34 @@
                         type="button" 
                         onclick="toggleThemeDropdown()" 
                         id="theme-dropdown-btn" 
-                        class="flex h-9 sm:h-10 items-center gap-2 rounded-full bg-white/10 dark:bg-slate-900/60 backdrop-blur-xl border border-white/20 dark:border-white/10 px-3 sm:px-3.5 text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/20 transition-all shadow-lg focus:outline-none cursor-pointer"
-                        title="Changer la couleur du thème"
+                        class="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white/10 dark:bg-slate-900/60 backdrop-blur-xl border border-white/20 dark:border-white/10 text-slate-200 hover:text-white hover:bg-white/20 transition-all shadow-lg focus:outline-none cursor-pointer"
+                        title="Couleur du thème"
                     >
-                        <span id="active-theme-dot" class="h-3.5 w-3.5 rounded-full shadow-sm ring-2 ring-white/30 bg-gradient-to-tr from-emerald-600 to-teal-400"></span>
-                        <span id="active-theme-name" class="font-medium text-slate-200">Émeraude</span>
-                        <svg id="theme-chevron" class="h-3.5 w-3.5 opacity-70 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
+                        <span id="active-theme-dot" class="h-4 w-4 rounded-full shadow-sm ring-2 ring-white/50 bg-gradient-to-tr from-emerald-600 to-teal-400"></span>
                     </button>
 
-                    <!-- Themes Dropdown Menu -->
+                    <!-- Themes Dropdown Menu (only circular color swatches) -->
                     <div 
                         id="theme-dropdown-menu" 
-                        class="absolute right-0 mt-2 hidden w-56 sm:w-60 overflow-hidden rounded-2xl border border-white/20 dark:border-white/10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-1.5 shadow-2xl z-50 animate-fade-in"
+                        class="absolute right-0 mt-2 hidden overflow-hidden rounded-2xl border border-white/20 dark:border-white/10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-2 shadow-2xl z-50 animate-fade-in"
                     >
-                        <div class="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-200/50 dark:border-slate-800/80 mb-1 flex items-center justify-between">
-                            <span>Couleur du Thème</span>
-                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4 3.5 3.5 0 017 0 4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="selectTheme('emerald')" class="theme-option relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 shadow-sm ring-2 ring-transparent transition-all hover:scale-110 focus:outline-none cursor-pointer" data-theme="emerald">
+                                <svg class="check-icon w-3.5 h-3.5 text-white hidden drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                            </button>
+                            <button type="button" onclick="selectTheme('ocean')" class="theme-option relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-cyan-400 shadow-sm ring-2 ring-transparent transition-all hover:scale-110 focus:outline-none cursor-pointer" data-theme="ocean">
+                                <svg class="check-icon w-3.5 h-3.5 text-white hidden drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                            </button>
+                            <button type="button" onclick="selectTheme('amethyst')" class="theme-option relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 shadow-sm ring-2 ring-transparent transition-all hover:scale-110 focus:outline-none cursor-pointer" data-theme="amethyst">
+                                <svg class="check-icon w-3.5 h-3.5 text-white hidden drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                            </button>
+                            <button type="button" onclick="selectTheme('sunset')" class="theme-option relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 shadow-sm ring-2 ring-transparent transition-all hover:scale-110 focus:outline-none cursor-pointer" data-theme="sunset">
+                                <svg class="check-icon w-3.5 h-3.5 text-white hidden drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                            </button>
+                            <button type="button" onclick="selectTheme('cyber')" class="theme-option relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-cyan-400 to-emerald-400 shadow-sm ring-2 ring-transparent transition-all hover:scale-110 focus:outline-none cursor-pointer" data-theme="cyber">
+                                <svg class="check-icon w-3.5 h-3.5 text-white hidden drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                            </button>
                         </div>
-                        
-                        <!-- Emerald -->
-                        <button type="button" onclick="selectTheme('emerald')" class="theme-option flex w-full items-center justify-between gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs transition-all hover:bg-slate-100 dark:hover:bg-slate-800/80 group" data-theme="emerald">
-                            <div class="flex items-center gap-2.5">
-                                <span class="h-4 w-4 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 shadow-sm ring-1 ring-white/20"></span>
-                                <div class="flex flex-col">
-                                    <span class="font-semibold text-slate-800 dark:text-slate-100 group-hover:text-emerald-500">Émeraude</span>
-                                    <span class="text-[10px] text-slate-400">Signature GUT Center</span>
-                                </div>
-                            </div>
-                            <svg class="check-icon w-4 h-4 text-emerald-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        </button>
-
-                        <!-- Ocean -->
-                        <button type="button" onclick="selectTheme('ocean')" class="theme-option flex w-full items-center justify-between gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs transition-all hover:bg-slate-100 dark:hover:bg-slate-800/80 group" data-theme="ocean">
-                            <div class="flex items-center gap-2.5">
-                                <span class="h-4 w-4 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-400 shadow-sm ring-1 ring-white/20"></span>
-                                <div class="flex flex-col">
-                                    <span class="font-semibold text-slate-800 dark:text-slate-100 group-hover:text-blue-500">Saphir Océan</span>
-                                    <span class="text-[10px] text-slate-400">Bleu & Cyan High-Tech</span>
-                                </div>
-                            </div>
-                            <svg class="check-icon w-4 h-4 text-blue-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        </button>
-
-                        <!-- Amethyst -->
-                        <button type="button" onclick="selectTheme('amethyst')" class="theme-option flex w-full items-center justify-between gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs transition-all hover:bg-slate-100 dark:hover:bg-slate-800/80 group" data-theme="amethyst">
-                            <div class="flex items-center gap-2.5">
-                                <span class="h-4 w-4 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 shadow-sm ring-1 ring-white/20"></span>
-                                <div class="flex flex-col">
-                                    <span class="font-semibold text-slate-800 dark:text-slate-100 group-hover:text-purple-500">Améthyste</span>
-                                    <span class="text-[10px] text-slate-400">Violet & Magenta</span>
-                                </div>
-                            </div>
-                            <svg class="check-icon w-4 h-4 text-purple-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        </button>
-
-                        <!-- Sunset -->
-                        <button type="button" onclick="selectTheme('sunset')" class="theme-option flex w-full items-center justify-between gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs transition-all hover:bg-slate-100 dark:hover:bg-slate-800/80 group" data-theme="sunset">
-                            <div class="flex items-center gap-2.5">
-                                <span class="h-4 w-4 rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 shadow-sm ring-1 ring-white/20"></span>
-                                <div class="flex flex-col">
-                                    <span class="font-semibold text-slate-800 dark:text-slate-100 group-hover:text-amber-500">Crépuscule</span>
-                                    <span class="text-[10px] text-slate-400">Ambre & Corail</span>
-                                </div>
-                            </div>
-                            <svg class="check-icon w-4 h-4 text-amber-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        </button>
-
-                        <!-- Cyber -->
-                        <button type="button" onclick="selectTheme('cyber')" class="theme-option flex w-full items-center justify-between gap-2.5 rounded-xl px-2.5 py-2 text-left text-xs transition-all hover:bg-slate-100 dark:hover:bg-slate-800/80 group" data-theme="cyber">
-                            <div class="flex items-center gap-2.5">
-                                <span class="h-4 w-4 rounded-full bg-gradient-to-tr from-cyan-400 to-emerald-400 shadow-sm ring-1 ring-white/20"></span>
-                                <div class="flex flex-col">
-                                    <span class="font-semibold text-slate-800 dark:text-slate-100 group-hover:text-cyan-500">Cyber Néon</span>
-                                    <span class="text-[10px] text-slate-400">Holographique</span>
-                                </div>
-                            </div>
-                            <svg class="check-icon w-4 h-4 text-cyan-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        </button>
                     </div>
                 </div>
 
@@ -485,23 +434,21 @@
 
                 // Update trigger button UI
                 const activeDot = document.getElementById('active-theme-dot');
-                const activeName = document.getElementById('active-theme-name');
                 if (activeDot) {
-                    activeDot.className = 'h-3.5 w-3.5 rounded-full shadow-sm ring-2 ring-white/30 ' + theme.gradientClass;
-                }
-                if (activeName) {
-                    activeName.textContent = theme.name;
+                    activeDot.className = 'h-4 w-4 rounded-full shadow-sm ring-2 ring-white/50 ' + theme.gradientClass;
                 }
 
-                // Update checkmark in dropdown
+                // Update active state and checkmark on circular swatches
                 document.querySelectorAll('.theme-option').forEach(option => {
                     const check = option.querySelector('.check-icon');
                     if (option.getAttribute('data-theme') === themeName) {
                         check?.classList.remove('hidden');
-                        option.classList.add('bg-slate-100/70', 'dark:bg-slate-800/60');
+                        option.classList.add('ring-white', 'scale-110');
+                        option.classList.remove('ring-transparent');
                     } else {
                         check?.classList.add('hidden');
-                        option.classList.remove('bg-slate-100/70', 'dark:bg-slate-800/60');
+                        option.classList.remove('ring-white', 'scale-110');
+                        option.classList.add('ring-transparent');
                     }
                 });
 

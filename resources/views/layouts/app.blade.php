@@ -352,23 +352,21 @@
 
                 // Update navbar button UI
                 const activeDot = document.getElementById('app-active-theme-dot');
-                const activeName = document.getElementById('app-active-theme-name');
                 if (activeDot) {
-                    activeDot.className = 'h-3.5 w-3.5 rounded-full shadow-sm ring-2 ring-white/40 dark:ring-white/20 ' + theme.gradientClass;
-                }
-                if (activeName) {
-                    activeName.textContent = theme.name;
+                    activeDot.className = 'h-4 w-4 rounded-full shadow-sm ring-2 ring-white/50 dark:ring-white/30 ' + theme.gradientClass;
                 }
 
-                // Update checkmarks in dropdown
+                // Update active state and checkmark on circular swatches
                 document.querySelectorAll('.app-theme-option').forEach(option => {
                     const check = option.querySelector('.app-check-icon');
                     if (option.getAttribute('data-theme') === themeName) {
                         check?.classList.remove('hidden');
-                        option.classList.add('bg-slate-100', 'dark:bg-slate-800');
+                        option.classList.add('ring-slate-700', 'dark:ring-white', 'scale-110');
+                        option.classList.remove('ring-transparent');
                     } else {
                         check?.classList.add('hidden');
-                        option.classList.remove('bg-slate-100', 'dark:bg-slate-800');
+                        option.classList.remove('ring-slate-700', 'dark:ring-white', 'scale-110');
+                        option.classList.add('ring-transparent');
                     }
                 });
 

@@ -30,65 +30,34 @@
                     type="button" 
                     onclick="toggleAppThemeDropdown()" 
                     id="app-theme-dropdown-btn" 
-                    class="inline-flex items-center gap-2 rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-all focus:outline-none cursor-pointer"
-                    title="Changer la couleur du thème"
+                    class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200/90 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-all focus:outline-none cursor-pointer"
+                    title="Couleur du thème"
                 >
-                    <span id="app-active-theme-dot" class="h-3.5 w-3.5 rounded-full shadow-sm ring-2 ring-white/40 dark:ring-white/20 bg-gradient-to-tr from-emerald-600 to-teal-400"></span>
-                    <span id="app-active-theme-name" class="hidden md:inline-block font-medium">Émeraude</span>
-                    <svg id="app-theme-chevron" class="h-3.5 w-3.5 opacity-70 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
+                    <span id="app-active-theme-dot" class="h-4 w-4 rounded-full shadow-sm ring-2 ring-white/50 dark:ring-white/30 bg-gradient-to-tr from-emerald-600 to-teal-400"></span>
                 </button>
 
-                <!-- Themes Dropdown Menu -->
+                <!-- Themes Dropdown Menu (only circular color swatches) -->
                 <div 
                     id="app-theme-dropdown-menu" 
-                    class="absolute right-0 mt-2 hidden w-56 overflow-hidden rounded-2xl border border-slate-200/90 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-1.5 shadow-2xl z-50 animate-fade-in"
+                    class="absolute right-0 mt-2 hidden overflow-hidden rounded-2xl border border-slate-200/90 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-2 shadow-2xl z-50 animate-fade-in"
                 >
-                    <div class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1 flex items-center justify-between">
-                        <span>Couleur du Thème</span>
-                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4 3.5 3.5 0 017 0 4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="selectAppTheme('emerald')" class="app-theme-option relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 shadow-sm ring-2 ring-transparent transition-all hover:scale-110 focus:outline-none cursor-pointer" data-theme="emerald">
+                            <svg class="app-check-icon w-3.5 h-3.5 text-white hidden drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        </button>
+                        <button type="button" onclick="selectAppTheme('ocean')" class="app-theme-option relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-cyan-400 shadow-sm ring-2 ring-transparent transition-all hover:scale-110 focus:outline-none cursor-pointer" data-theme="ocean">
+                            <svg class="app-check-icon w-3.5 h-3.5 text-white hidden drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        </button>
+                        <button type="button" onclick="selectAppTheme('amethyst')" class="app-theme-option relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 shadow-sm ring-2 ring-transparent transition-all hover:scale-110 focus:outline-none cursor-pointer" data-theme="amethyst">
+                            <svg class="app-check-icon w-3.5 h-3.5 text-white hidden drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        </button>
+                        <button type="button" onclick="selectAppTheme('sunset')" class="app-theme-option relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 shadow-sm ring-2 ring-transparent transition-all hover:scale-110 focus:outline-none cursor-pointer" data-theme="sunset">
+                            <svg class="app-check-icon w-3.5 h-3.5 text-white hidden drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        </button>
+                        <button type="button" onclick="selectAppTheme('cyber')" class="app-theme-option relative flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-cyan-400 to-emerald-400 shadow-sm ring-2 ring-transparent transition-all hover:scale-110 focus:outline-none cursor-pointer" data-theme="cyber">
+                            <svg class="app-check-icon w-3.5 h-3.5 text-white hidden drop-shadow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                        </button>
                     </div>
-                    
-                    <button type="button" onclick="selectAppTheme('emerald')" class="app-theme-option flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 group" data-theme="emerald">
-                        <div class="flex items-center gap-2">
-                            <span class="h-3.5 w-3.5 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 shadow-sm ring-1 ring-black/10"></span>
-                            <span class="font-medium text-slate-700 dark:text-slate-200 group-hover:text-emerald-500">Émeraude</span>
-                        </div>
-                        <svg class="app-check-icon w-3.5 h-3.5 text-emerald-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                    </button>
-
-                    <button type="button" onclick="selectAppTheme('ocean')" class="app-theme-option flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 group" data-theme="ocean">
-                        <div class="flex items-center gap-2">
-                            <span class="h-3.5 w-3.5 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-400 shadow-sm ring-1 ring-black/10"></span>
-                            <span class="font-medium text-slate-700 dark:text-slate-200 group-hover:text-blue-500">Saphir Océan</span>
-                        </div>
-                        <svg class="app-check-icon w-3.5 h-3.5 text-blue-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                    </button>
-
-                    <button type="button" onclick="selectAppTheme('amethyst')" class="app-theme-option flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 group" data-theme="amethyst">
-                        <div class="flex items-center gap-2">
-                            <span class="h-3.5 w-3.5 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 shadow-sm ring-1 ring-black/10"></span>
-                            <span class="font-medium text-slate-700 dark:text-slate-200 group-hover:text-purple-500">Améthyste</span>
-                        </div>
-                        <svg class="app-check-icon w-3.5 h-3.5 text-purple-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                    </button>
-
-                    <button type="button" onclick="selectAppTheme('sunset')" class="app-theme-option flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 group" data-theme="sunset">
-                        <div class="flex items-center gap-2">
-                            <span class="h-3.5 w-3.5 rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 shadow-sm ring-1 ring-black/10"></span>
-                            <span class="font-medium text-slate-700 dark:text-slate-200 group-hover:text-amber-500">Crépuscule</span>
-                        </div>
-                        <svg class="app-check-icon w-3.5 h-3.5 text-amber-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                    </button>
-
-                    <button type="button" onclick="selectAppTheme('cyber')" class="app-theme-option flex w-full items-center justify-between gap-2 rounded-xl px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 group" data-theme="cyber">
-                        <div class="flex items-center gap-2">
-                            <span class="h-3.5 w-3.5 rounded-full bg-gradient-to-tr from-cyan-400 to-emerald-400 shadow-sm ring-1 ring-black/10"></span>
-                            <span class="font-medium text-slate-700 dark:text-slate-200 group-hover:text-cyan-500">Cyber Néon</span>
-                        </div>
-                        <svg class="app-check-icon w-3.5 h-3.5 text-cyan-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                    </button>
                 </div>
             </div>
 
@@ -164,11 +133,11 @@
         <div class="border-t border-gray-200 dark:border-slate-800 px-4 py-3">
             <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Thème de l'application</div>
             <div class="flex items-center gap-2">
-                <button type="button" onclick="selectAppTheme('emerald')" class="h-7 w-7 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 ring-2 ring-white/30 shadow-sm" title="Émeraude"></button>
-                <button type="button" onclick="selectAppTheme('ocean')" class="h-7 w-7 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-400 ring-2 ring-white/30 shadow-sm" title="Saphir Océan"></button>
-                <button type="button" onclick="selectAppTheme('amethyst')" class="h-7 w-7 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 ring-2 ring-white/30 shadow-sm" title="Améthyste"></button>
-                <button type="button" onclick="selectAppTheme('sunset')" class="h-7 w-7 rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 ring-2 ring-white/30 shadow-sm" title="Crépuscule"></button>
-                <button type="button" onclick="selectAppTheme('cyber')" class="h-7 w-7 rounded-full bg-gradient-to-tr from-cyan-400 to-emerald-400 ring-2 ring-white/30 shadow-sm" title="Cyber Néon"></button>
+                <button type="button" onclick="selectAppTheme('emerald')" class="h-7 w-7 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 ring-2 ring-white/30 shadow-sm transition-transform active:scale-95"></button>
+                <button type="button" onclick="selectAppTheme('ocean')" class="h-7 w-7 rounded-full bg-gradient-to-tr from-blue-600 to-cyan-400 ring-2 ring-white/30 shadow-sm transition-transform active:scale-95"></button>
+                <button type="button" onclick="selectAppTheme('amethyst')" class="h-7 w-7 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 ring-2 ring-white/30 shadow-sm transition-transform active:scale-95"></button>
+                <button type="button" onclick="selectAppTheme('sunset')" class="h-7 w-7 rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 ring-2 ring-white/30 shadow-sm transition-transform active:scale-95"></button>
+                <button type="button" onclick="selectAppTheme('cyber')" class="h-7 w-7 rounded-full bg-gradient-to-tr from-cyan-400 to-emerald-400 ring-2 ring-white/30 shadow-sm transition-transform active:scale-95"></button>
             </div>
         </div>
 
