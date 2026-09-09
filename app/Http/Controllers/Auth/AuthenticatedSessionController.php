@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use App\Models\User;
+use App\Services\AuthSecurityNotifier;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -108,6 +109,13 @@ class AuthenticatedSessionController extends Controller
                 $user->increment('failed_login_lockouts');
                 $lockouts = $user->failed_login_lockouts;
 
+                $deviceBrowser = $request->string('device_browser')->toString() ?: $request->header('User-Agent');
+
+                // If admin account reached 5 failed attempts, send security alert email & in-app notification
+                if ($user->hasRole('Admin')) {
+                    AuthSecurityNotifier::notifyAdminFailedAttempts($user, $request->ip(), $deviceBrowser);
+                }
+
                 // After 2 lockouts
                 if ($lockouts >= 2) {
                     if ($user->hasRole('Admin')) {
@@ -123,6 +131,9 @@ class AuthenticatedSessionController extends Controller
                     // Suspend non-admin account automatically
                     $user->update(['is_active' => false]);
                     DB::table('active_sessions')->where('user_id', $user->id)->delete();
+
+                    // Send email to user, email to admins, and in-app admin notification
+                    AuthSecurityNotifier::notifyAccountSuspended($user, $request->ip(), $deviceBrowser);
 
                     return back()->withInput($request->only('email', 'remember'))
                         ->with('auto_suspended', true)
