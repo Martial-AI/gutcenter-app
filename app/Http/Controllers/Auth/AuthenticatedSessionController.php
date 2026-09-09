@@ -29,7 +29,8 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->ensureIsNotRateLimited();
-        $user = User::where('email', $request->string('email')->toString())->first();
+        $email = trim($request->string('email')->toString());
+        $user = User::where('email', $email)->first();
         if (! $user || ! Hash::check($request->string('password')->toString(), $user->password)) {
             RateLimiter::hit($request->throttleKey());
             return back()->withInput($request->only('email', 'remember'))->withErrors(['email' => trans('auth.failed')]);

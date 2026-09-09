@@ -27,6 +27,14 @@
             </div>
         @endif
 
+        <!-- Credentials Error Banner -->
+        @if ($errors->first('email') && $errors->first('email') !== __('Your account has been suspended. Contact the Manager.'))
+            <div class="mb-5 flex items-center gap-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 p-3.5 text-xs sm:text-sm font-medium text-rose-600 dark:text-rose-400">
+                <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                <span>{{ $errors->first('email') }}</span>
+            </div>
+        @endif
+
         <form id="login-form" method="POST" action="{{ route('login') }}" class="space-y-4 sm:space-y-5">
             @csrf
             <input id="device-model" type="hidden" name="device_model">
@@ -38,7 +46,7 @@
                 <label for="email" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
                     {{ __('Email') }}
                 </label>
-                <div class="relative rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/50 dark:bg-slate-800/50 transition-all duration-200 focus-within:border-[var(--theme-primary)] focus-within:ring-4 focus-within:ring-[var(--theme-glow)] focus-within:bg-white dark:focus-within:bg-slate-800">
+                <div class="relative rounded-2xl border {{ $errors->has('email') ? 'border-rose-400 dark:border-rose-500/50 ring-2 ring-rose-500/10' : 'border-slate-200 dark:border-slate-700/80' }} bg-slate-50/50 dark:bg-slate-800/50 transition-all duration-200 focus-within:border-[var(--theme-primary)] focus-within:ring-4 focus-within:ring-[var(--theme-glow)] focus-within:bg-white dark:focus-within:bg-slate-800">
                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
                         <svg class="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>

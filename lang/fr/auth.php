@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'failed' => 'Ces informations d’identification ne correspondent pas à nos dossiers.',
+    'failed' => 'Login ou Mot de passe incorrect',
     'password' => 'Le mot de passe fourni est incorrect.',
     'throttle' => 'Trop de tentatives de connexion. Réessayez dans :seconds secondes.',
 ];
