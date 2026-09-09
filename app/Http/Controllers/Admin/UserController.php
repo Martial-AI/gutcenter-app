@@ -128,7 +128,11 @@ class UserController extends Controller
     {
         $this->authorizeAdmin(); $this->confirmAdminPassword($request);
         abort_if($user->is(auth()->user()), 422, __('You cannot deactivate your own account.'));
-        $user->update(['is_active' => ! $user->is_active]);
+        $newActive = ! $user->is_active;
+        $user->update([
+            'is_active' => $newActive,
+            'failed_login_lockouts' => $newActive ? 0 : $user->failed_login_lockouts,
+        ]);
         if (! $user->is_active) $this->invalidateUserSessions($user);
         $this->record($user, $user->is_active ? 'a réactivé le compte '.$user->name : 'a suspendu le compte '.$user->name);
         SensitiveActivityNotifier::send('Compte modifié', ($user->is_active ? 'Compte réactivé : ' : 'Compte suspendu : ').$user->name);

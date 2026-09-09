@@ -300,7 +300,7 @@
             </div>
         @endif
 
-        @if ((session('error') || $errors->any()) && $errors->first('email') !== __('Your account has been suspended. Contact the Manager.'))
+        @if ((session('error') || $errors->any()) && $errors->first('email') !== __('Your account has been suspended. Contact the Manager.') && !session('auto_suspended') && !session('admin_lockout') && !session('lockout_seconds'))
             <div id="guest-error-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-md p-4 animate-fade-in">
                 <div class="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 p-6 text-center shadow-2xl border border-rose-500/20">
                     <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/10 text-rose-500 mb-3">
