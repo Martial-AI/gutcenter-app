@@ -53,8 +53,6 @@ class LoginRequest extends FormRequest
         }
 
         if (! $user) {
-            RateLimiter::hit($this->throttleKey());
-
             throw ValidationException::withMessages([
                 'email' => trans('auth.user_not_found'),
             ]);

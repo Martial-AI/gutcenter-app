@@ -43,14 +43,26 @@ class AuthenticatedSessionController extends Controller
         $throttleKey = $request->throttleKey();
         $user = User::where('email', $email)->first();
 
-        // 1. Check if currently rate-limited (active 60s cooldown)
+        // 1. If email has no account, do not count attempts and do not activate lockout
+        if (! $user) {
+            return back()->withInput($request->only('email', 'remember'))
+                ->withErrors(['email' => trans('auth.user_not_found')]);
+        }
+
+        // 2. If account is already deactivated / suspended
+        if (! $user->is_active) {
+            return back()->withInput($request->only('email', 'remember'))
+                ->withErrors(['email' => __('Your account has been suspended. Contact the Manager.')]);
+        }
+
+        // 3. Check if currently rate-limited (active 60s cooldown on this account)
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             $seconds = $seconds > 0 ? $seconds : 60;
             $lockedUntil = now()->addSeconds($seconds)->timestamp * 1000;
             session(['login_attempted_email' => $email]);
 
-            if ($user && $user->failed_login_lockouts >= 2) {
+            if ($user->failed_login_lockouts >= 2) {
                 if ($user->hasRole('Admin')) {
                     return back()->withInput($request->only('email', 'remember'))
                         ->with('admin_lockout', true)
@@ -76,11 +88,9 @@ class AuthenticatedSessionController extends Controller
                 ->withErrors(['email' => trans('auth.throttle', ['seconds' => $seconds])]);
         }
 
-        // 2. Check credentials
+        // 4. Check password for existing account
         $password = $request->string('password')->toString();
-        $isPasswordCorrect = $user && Hash::check($password, $user->password);
-
-        if (! $user || ! $isPasswordCorrect) {
+        if (! Hash::check($password, $user->password)) {
             RateLimiter::hit($throttleKey, 300);
             $attempts = RateLimiter::attempts($throttleKey);
 
@@ -95,33 +105,31 @@ class AuthenticatedSessionController extends Controller
                 $lockedUntil = now()->addSeconds(60)->timestamp * 1000;
                 session(['login_attempted_email' => $email]);
 
-                if ($user) {
-                    $user->increment('failed_login_lockouts');
-                    $lockouts = $user->failed_login_lockouts;
+                $user->increment('failed_login_lockouts');
+                $lockouts = $user->failed_login_lockouts;
 
-                    // After 2 lockouts
-                    if ($lockouts >= 2) {
-                        if ($user->hasRole('Admin')) {
-                            return back()->withInput($request->only('email', 'remember'))
-                                ->with('admin_lockout', true)
-                                ->with('admin_email', $user->email)
-                                ->with('lockout_seconds', $seconds)
-                                ->with('locked_until', $lockedUntil)
-                                ->with('attempts_left', 0)
-                                ->withErrors(['email' => trans('auth.admin_lockout')]);
-                        }
-
-                        // Suspend non-admin account automatically
-                        $user->update(['is_active' => false]);
-                        DB::table('active_sessions')->where('user_id', $user->id)->delete();
-
+                // After 2 lockouts
+                if ($lockouts >= 2) {
+                    if ($user->hasRole('Admin')) {
                         return back()->withInput($request->only('email', 'remember'))
-                            ->with('auto_suspended', true)
+                            ->with('admin_lockout', true)
+                            ->with('admin_email', $user->email)
                             ->with('lockout_seconds', $seconds)
                             ->with('locked_until', $lockedUntil)
                             ->with('attempts_left', 0)
-                            ->withErrors(['email' => trans('auth.auto_suspended')]);
+                            ->withErrors(['email' => trans('auth.admin_lockout')]);
                     }
+
+                    // Suspend non-admin account automatically
+                    $user->update(['is_active' => false]);
+                    DB::table('active_sessions')->where('user_id', $user->id)->delete();
+
+                    return back()->withInput($request->only('email', 'remember'))
+                        ->with('auto_suspended', true)
+                        ->with('lockout_seconds', $seconds)
+                        ->with('locked_until', $lockedUntil)
+                        ->with('attempts_left', 0)
+                        ->withErrors(['email' => trans('auth.auto_suspended')]);
                 }
 
                 // First lockout (60s countdown)
@@ -134,19 +142,10 @@ class AuthenticatedSessionController extends Controller
 
             // Attempts 1 to 4 failed
             $attemptsLeft = max(0, 5 - $attempts);
-            $errorMessage = ! $user
-                ? trans('auth.user_not_found')
-                : trans('auth.failed');
 
             return back()->withInput($request->only('email', 'remember'))
                 ->with('attempts_left', $attemptsLeft)
-                ->withErrors(['email' => $errorMessage]);
-        }
-
-        // 3. User is valid, but account is deactivated
-        if (! $user->is_active) {
-            return back()->withInput($request->only('email', 'remember'))
-                ->withErrors(['email' => __('Your account has been suspended. Contact the Manager.')]);
+                ->withErrors(['email' => trans('auth.failed')]);
         }
 
         // 4. Successful login
