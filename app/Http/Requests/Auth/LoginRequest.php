@@ -52,6 +52,14 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        if (! $user) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => trans('auth.user_not_found'),
+            ]);
+        }
+
         if (! Auth::attempt(['email' => $email, 'password' => $this->string('password')->toString()], $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 

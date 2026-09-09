@@ -134,10 +134,13 @@ class AuthenticatedSessionController extends Controller
 
             // Attempts 1 to 4 failed
             $attemptsLeft = max(0, 5 - $attempts);
+            $errorMessage = ! $user
+                ? trans('auth.user_not_found')
+                : trans('auth.failed');
 
             return back()->withInput($request->only('email', 'remember'))
                 ->with('attempts_left', $attemptsLeft)
-                ->withErrors(['email' => trans('auth.failed')]);
+                ->withErrors(['email' => $errorMessage]);
         }
 
         // 3. User is valid, but account is deactivated

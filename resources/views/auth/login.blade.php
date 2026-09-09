@@ -197,7 +197,7 @@
                                 <span>{{ __('Connexion verrouillée') }}</span>
                             </div>
                             <div class="text-xs text-white/95 font-medium mt-0.5">
-                                <span>{{ __('Compte à rebours :') }}</span> <span id="countdown-sec-text" class="font-extrabold text-amber-200 font-mono text-sm">60s</span>
+                                <span>{{ __('Reconnectez-vous dans') }}</span> <span id="countdown-sec-text" class="font-extrabold text-amber-200 font-mono text-sm">60s</span>
                             </div>
                         </div>
                     </div>

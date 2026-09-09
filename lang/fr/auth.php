@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'failed'             => 'Login ou Mot de passe incorrect',
+    'failed'             => 'Mot de passe incorrect',
+    'user_not_found'     => "Cet email n'a pas de compte, réessayez un autre email.",
     'password'           => 'Le mot de passe fourni est incorrect.',
     'throttle'           => 'Trop de tentatives de connexion. Réessayez dans :seconds secondes.',
     'attempts_remaining' => ':count tentative(s) restante(s) avant blocage temporaire.',
