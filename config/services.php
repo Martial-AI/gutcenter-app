@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'zkteco' => [
+        'ip' => env('ZKTECO_IP', '192.168.0.201'),
+        'port' => (int) env('ZKTECO_PORT', 4370),
+        'timeout' => (int) env('ZKTECO_TIMEOUT', 5),
+    ],
+
 ];

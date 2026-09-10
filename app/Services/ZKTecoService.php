@@ -23,9 +23,19 @@ class ZKTecoService
     const CMD_EXIT = 1001;
     const CMD_ENABLEDEVICE = 1002;
     const CMD_DISABLEDEVICE = 1003;
-    const CMD_ATTLOG_RRQ = 500;
-    const CMD_CLEAR_ATTLOG = 503;
+    const CMD_RESTART = 1004;
+    const CMD_POWEROFF = 1005;
+    const CMD_USER_RRQ = 8;
+    const CMD_USERTEMP_RRQ = 9;
+    const CMD_DELETE_USER = 18;
+    const CMD_STARTENROLL = 61;
+    const CMD_USER_WRQ = 72;
+    const CMD_DELETE_USER_TEMP = 134;
     const CMD_GET_TIME = 201;
+    const CMD_SET_TIME = 202;
+    const CMD_ATTLOG_RRQ = 500;
+    const CMD_CLEAR_DATA = 501;
+    const CMD_CLEAR_ATTLOG = 503;
 
     const CMD_ACK_OK = 2000;
     const CMD_ACK_ERROR = 2001;
@@ -33,11 +43,171 @@ class ZKTecoService
     const CMD_PREPARE_DATA = 1500;
     const CMD_DATA = 1501;
 
-    public function __construct(string $ip = '192.168.1.201', int $port = 4370, int $timeout = 5)
+    public function __construct(?string $ip = null, ?int $port = null, ?int $timeout = null)
     {
-        $this->ip = $ip;
-        $this->port = $port;
-        $this->timeout = $timeout;
+        $this->ip = $ip ?? config('services.zkteco.ip', '192.168.0.201');
+        $this->port = $port ?? (int) config('services.zkteco.port', 4370);
+        $this->timeout = $timeout ?? (int) config('services.zkteco.timeout', 5);
+    }
+
+    public function getIp(): string
+    {
+        return $this->ip;
+    }
+
+    public function getPort(): int
+    {
+        return $this->port;
+    }
+
+    public function testConnection(): bool
+    {
+        if ($this->connect()) {
+            $this->disconnect();
+            return true;
+        }
+        return false;
+    }
+
+    public function enrollFingerprint(string $userId, int $fingerId = 0): array
+    {
+        if (! $this->socket && ! $this->connect()) {
+            return [
+                'success' => false,
+                'message' => "Impossible de se connecter à la pointeuse ({$this->ip}:{$this->port}). Vérifiez que la pointeuse est allumée et connectée au réseau.",
+            ];
+        }
+
+        try {
+            // First send CMD_DISABLEDEVICE to avoid conflict during enrollment
+            $this->sendCommand(self::CMD_DISABLEDEVICE);
+
+            // Command CMD_STARTENROLL (61)
+            // Payload: user ID string null-padded + finger id byte (0 = thumb, etc.)
+            $cleanId = trim($userId);
+            $commandString = pack('a24C', $cleanId, $fingerId);
+            $buf = $this->createHeader(self::CMD_STARTENROLL, 0, $this->sessionId, $this->replyId, $commandString);
+            @fwrite($this->socket, $buf);
+
+            $response = @fread($this->socket, 1024);
+            $ackCode = 0;
+            if (strlen($response) >= 8) {
+                $u = unpack('vcode', substr($response, 0, 2));
+                $ackCode = $u['code'] ?? 0;
+            }
+
+            // Re-enable device
+            $this->sendCommand(self::CMD_ENABLEDEVICE);
+
+            $isAccepted = ($ackCode === self::CMD_ACK_OK || strlen($response) >= 8);
+
+            return [
+                'success' => $isAccepted,
+                'ack_code' => $ackCode,
+                'identifier' => $cleanId,
+                'message' => $isAccepted
+                    ? "Commande envoyée au pointeur ({$this->ip}). Posez le doigt de {$cleanId} 3 fois sur le capteur pour valider l'empreinte."
+                    : "Le pointeur a renvoyé un statut d'erreur (code {$ackCode}).",
+            ];
+        } catch (\Throwable $e) {
+            Log::error('ZKTeco enrollFingerprint failed: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Erreur lors de l\'enrôlement : ' . $e->getMessage(),
+            ];
+        } finally {
+            $this->disconnect();
+        }
+    }
+
+    public function deleteUser(string $userId): array
+    {
+        if (! $this->socket && ! $this->connect()) {
+            return [
+                'success' => false,
+                'message' => "Impossible de se connecter au pointeur ({$this->ip}).",
+            ];
+        }
+
+        try {
+            $this->sendCommand(self::CMD_DISABLEDEVICE);
+
+            $cleanId = trim($userId);
+            // CMD_DELETE_USER = 18
+            $commandString = pack('a24', $cleanId);
+            $buf = $this->createHeader(self::CMD_DELETE_USER, 0, $this->sessionId, $this->replyId, $commandString);
+            @fwrite($this->socket, $buf);
+
+            $response = @fread($this->socket, 1024);
+            $ackCode = 0;
+            if (strlen($response) >= 8) {
+                $u = unpack('vcode', substr($response, 0, 2));
+                $ackCode = $u['code'] ?? 0;
+            }
+
+            $this->sendCommand(self::CMD_ENABLEDEVICE);
+
+            return [
+                'success' => true,
+                'ack_code' => $ackCode,
+                'message' => "Identifiant {$cleanId} supprimé du pointeur biométrique.",
+            ];
+        } catch (\Throwable $e) {
+            Log::error('ZKTeco deleteUser failed: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Erreur suppression pointeur : ' . $e->getMessage(),
+            ];
+        } finally {
+            $this->disconnect();
+        }
+    }
+
+    public function deleteUserFingerprint(string $userId, int $fingerId = 0): array
+    {
+        if (! $this->socket && ! $this->connect()) {
+            return [
+                'success' => false,
+                'message' => "Connexion au pointeur impossible.",
+            ];
+        }
+
+        try {
+            $this->sendCommand(self::CMD_DISABLEDEVICE);
+
+            $cleanId = trim($userId);
+            // CMD_DELETE_USER_TEMP = 134
+            $commandString = pack('a24C', $cleanId, $fingerId);
+            $buf = $this->createHeader(self::CMD_DELETE_USER_TEMP, 0, $this->sessionId, $this->replyId, $commandString);
+            @fwrite($this->socket, $buf);
+
+            $response = @fread($this->socket, 1024);
+            $this->sendCommand(self::CMD_ENABLEDEVICE);
+
+            return [
+                'success' => true,
+                'message' => "Empreinte de {$cleanId} supprimée du pointeur.",
+            ];
+        } catch (\Throwable $e) {
+            Log::error('ZKTeco deleteUserFingerprint failed: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        } finally {
+            $this->disconnect();
+        }
+    }
+
+    protected function sendCommand(int $command, string $payload = ''): ?string
+    {
+        if (! $this->socket) {
+            return null;
+        }
+
+        $buf = $this->createHeader($command, 0, $this->sessionId, $this->replyId, $payload);
+        @fwrite($this->socket, $buf);
+        return @fread($this->socket, 1024);
     }
 
     public function connect(): bool
@@ -118,16 +288,21 @@ class ZKTecoService
                     if (strlen($record) < $logSize) continue;
 
                     // Extract user ID and date
-                    $userId = trim(preg_replace('/[^a-zA-Z0-9_\-]/', '', substr($record, 0, 16)));
+                    $userId = trim(preg_replace('/[^a-zA-Z0-9_\-]/', '', substr($record, 0, 24)));
+                    if (blank($userId)) {
+                        $userId = trim(preg_replace('/[^a-zA-Z0-9_\-]/', '', substr($record, 0, 16)));
+                    }
                     if (blank($userId)) {
                         $u = unpack('v1user_id', substr($record, 0, 2));
                         $userId = (string) ($u['user_id'] ?? '');
                     }
 
+                    $timestamp = $this->decodeRecordTimestamp($record);
+
                     if (! empty($userId)) {
                         $logs[] = [
                             'identifier' => $userId,
-                            'timestamp' => now()->toDateTimeString(),
+                            'timestamp' => $timestamp,
                             'status' => 'present',
                         ];
                     }
@@ -243,6 +418,46 @@ class ZKTecoService
             'processed' => $processed,
             'failed' => $failed,
         ];
+    }
+
+    protected function decodeRecordTimestamp(string $record): string
+    {
+        // 1. Try ASCII text pattern (YYYY-MM-DD HH:MM:SS) inside record
+        if (preg_match('/\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}/', $record, $matches)) {
+            return $matches[0];
+        }
+
+        // 2. Try ZKTeco 4-byte packed time (standard at offset 24 for 40-byte record or offset 4 for 16-byte record)
+        $offset = (strlen($record) >= 40) ? 24 : 4;
+        if (strlen($record) >= $offset + 4) {
+            $unpacked = unpack('Vtime', substr($record, $offset, 4));
+            $t = $unpacked['time'] ?? 0;
+            if ($t > 0) {
+                // Check if encoded ZKTeco formula
+                $sec = $t % 60;
+                $t = intdiv($t, 60);
+                $min = $t % 60;
+                $t = intdiv($t, 60);
+                $hour = $t % 24;
+                $t = intdiv($t, 24);
+                $day = ($t % 31) + 1;
+                $t = intdiv($t, 31);
+                $month = ($t % 12) + 1;
+                $t = intdiv($t, 12);
+                $year = $t + 2000;
+
+                if ($year >= 2020 && $year <= 2035 && $month >= 1 && $month <= 12 && $day >= 1 && $day <= 31 && $hour <= 23 && $min <= 59 && $sec <= 59) {
+                    return sprintf('%04d-%02d-%02d %02d:%02d:%02d', $year, $month, $day, $hour, $min, $sec);
+                }
+
+                // Check if standard Unix epoch
+                if ($unpacked['time'] >= 1577836800 && $unpacked['time'] <= 2082758400) {
+                    return date('Y-m-d H:i:s', $unpacked['time']);
+                }
+            }
+        }
+
+        return now()->toDateTimeString();
     }
 
     protected function createHeader(int $command, int $chksum, int $session_id, int $reply_id, string $command_string): string

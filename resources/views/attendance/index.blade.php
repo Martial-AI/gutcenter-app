@@ -10,7 +10,15 @@
                     <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     {{ __('Biometric Terminal Active') }}
                 </span>
+                <button type="button" onclick="openPointagesModal()" class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 transition active:scale-95">
+                    <svg class="h-4 w-4 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>{{ __('Pointages') }}</span>
+                </button>
                 @can('attendance.manage')
+                    <button type="button" onclick="openEnrollFingerprintModal()" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 transition active:scale-95">
+                        <svg class="h-4 w-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004.07 9.294M15 11a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m-2-2h4"/></svg>
+                        <span>{{ __('Ajouter une empreinte') }}</span>
+                    </button>
                     <form id="sync-zkteco-form" method="POST" action="{{ route('attendance.sync-device') }}" class="inline-flex" onsubmit="handleSyncDevice(event, this)">
                         @csrf
                         <button type="submit" id="sync-zkteco-btn" class="inline-flex items-center gap-1.5 rounded-xl bg-slate-800 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-900 transition active:scale-95" title="{{ __('Connect to ZKTeco on local network') }}">
@@ -826,9 +834,595 @@
     </div>
     @endcan
 
+    <!-- ========================================================================= -->
+    <!-- MODAL 1: Pointages & Historique Biométrique ZKTeco                        -->
+    <!-- ========================================================================= -->
+    <div id="pointages-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-3 sm:p-4 transition-all">
+        <div class="relative w-full max-w-4xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 shadow-inner">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-base font-bold text-white">Pointages & Historique Biométrique</h3>
+                            <span id="pointages-count-badge" class="rounded-full bg-indigo-500/30 px-2.5 py-0.5 text-xs font-semibold text-indigo-200 border border-indigo-400/30">0 pointage(s)</span>
+                        </div>
+                        <p class="text-xs text-slate-300">Tous les pointages en direct groupés par date avec heure précise du pointeur</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closePointagesModal()" class="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white transition">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="border-b border-slate-100 dark:border-slate-800 px-6 py-3 bg-slate-50 dark:bg-slate-800/40 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-wrap items-center gap-2.5 flex-1 min-w-[260px]">
+                    <div class="relative flex-1 max-w-sm">
+                        <svg class="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="text" id="pointages-search-input" oninput="debounceFetchPointages()" placeholder="Rechercher nom, élève ST26-..., personnel PA26-..." class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 pl-9 pr-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                    </div>
+                    <input type="date" id="pointages-date-input" onchange="fetchPointages()" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" title="Filtrer par date">
+                    <button type="button" onclick="clearPointagesDateFilter()" class="text-xs text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 font-medium">Toutes les dates</button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="fetchPointages()" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 transition shadow-sm active:scale-95">
+                        <svg id="pointages-refresh-icon" class="h-3.5 w-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>Actualiser</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- List of Pointages grouped by date -->
+            <div id="pointages-list-container" class="flex-1 overflow-y-auto p-6 space-y-6">
+                <!-- Content injected dynamically -->
+            </div>
+
+            <!-- Footer -->
+            <div class="border-t border-slate-100 dark:border-slate-800 px-6 py-3 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-between text-xs text-slate-500">
+                <span class="flex items-center gap-1.5">
+                    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Terminal ZKTeco à <span class="font-mono font-semibold text-slate-700 dark:text-slate-300">192.168.0.201:4370</span>
+                </span>
+                <button type="button" onclick="closePointagesModal()" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 transition">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODAL 2: Ajouter / Enrôler une Empreinte Biométrique                     -->
+    <!-- ========================================================================= -->
+    <div id="enroll-fingerprint-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-3 sm:p-4 transition-all">
+        <div class="relative w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-emerald-300 border border-white/20 shadow-inner">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004.07 9.294M15 11a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m-2-2h4"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            Ajouter une Empreinte Biométrique
+                        </h3>
+                        <p class="text-xs text-emerald-100">Enrôlement direct sur le pointeur ZKTeco (192.168.0.201)</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeEnrollFingerprintModal()" class="rounded-lg p-2 text-white/70 hover:bg-white/10 hover:text-white transition">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                <!-- Type selection tabs -->
+                <div class="flex items-center rounded-xl bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700">
+                    <button type="button" id="tab-enroll-students" onclick="switchEnrollTab('student')" class="flex-1 rounded-lg py-2 text-xs font-bold transition bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-sm">
+                        Élèves (<span id="count-enroll-students">0</span>)
+                    </button>
+                    <button type="button" id="tab-enroll-users" onclick="switchEnrollTab('user')" class="flex-1 rounded-lg py-2 text-xs font-bold transition text-slate-500 dark:text-slate-400 hover:text-slate-800">
+                        Personnels : Profs, Admin, etc. (<span id="count-enroll-users">0</span>)
+                    </button>
+                </div>
+
+                <!-- Search box -->
+                <div class="relative">
+                    <svg class="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input type="text" id="enroll-search-input" oninput="filterEnrollPersons()" placeholder="Rechercher par nom ou identifiant (ex: ST26-..., PA26-...)..." class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                </div>
+
+                <!-- Persons scrollable select list -->
+                <div class="space-y-1.5 max-h-56 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 p-2 bg-slate-50/50 dark:bg-slate-900/50" id="enroll-person-list">
+                    <div class="py-8 text-center text-xs text-slate-400">Chargement des élèves et personnels...</div>
+                </div>
+
+                <!-- Selected Person Preview Card -->
+                <div id="enroll-selected-card" class="hidden rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 transition-all">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white font-bold text-sm shadow-sm" id="enroll-selected-avatar">
+                                --
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h4 class="text-sm font-bold text-slate-900 dark:text-white" id="enroll-selected-name">--</h4>
+                                    <span class="rounded-md bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 text-xs font-mono font-bold text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700" id="enroll-selected-id">--</span>
+                                </div>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5" id="enroll-selected-sub">--</p>
+                            </div>
+                        </div>
+                        <span id="enroll-selected-status-badge"></span>
+                    </div>
+
+                    <div class="mt-3.5 rounded-lg bg-white dark:bg-slate-800/80 p-3 border border-emerald-100 dark:border-emerald-900/40 text-xs space-y-1">
+                        <div class="font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                            <svg class="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Instructions d'enregistrement :
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-300">
+                            1. Cliquez sur <strong class="text-emerald-700 dark:text-emerald-400">« Lancer l'enregistrement »</strong> ci-dessous.<br>
+                            2. L'identifiant <strong class="font-mono text-emerald-700 dark:text-emerald-300" id="enroll-instruction-id">...</strong> sera transmis au pointeur ZKTeco (192.168.0.201).<br>
+                            3. L'élève ou le personnel pose son doigt <strong>3 fois</strong> consécutives sur le capteur quand la lumière s'allume.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Sensor prompt status / live alert -->
+                <div id="enroll-live-status" class="hidden rounded-xl border p-4 transition-all">
+                    <div class="flex items-center gap-3">
+                        <div id="enroll-status-spinner" class="h-6 w-6 shrink-0 animate-spin text-emerald-600">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        </div>
+                        <div>
+                            <h5 class="text-xs font-bold" id="enroll-live-status-title">Communication en cours...</h5>
+                            <p class="text-xs mt-0.5 text-slate-600 dark:text-slate-300" id="enroll-live-status-desc">Envoi de la commande d'enrôlement vers la pointeuse...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="border-t border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between gap-3">
+                <button type="button" onclick="closeEnrollFingerprintModal()" class="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition">
+                    Fermer
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="enroll-delete-btn" onclick="deleteSelectedFingerprint()" class="hidden rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 px-3.5 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-100 transition active:scale-95">
+                        Supprimer l'empreinte
+                    </button>
+                    <button type="button" id="enroll-submit-btn" disabled onclick="submitEnrollment()" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004.07 9.294M15 11a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m-2-2h4"/></svg>
+                        <span id="enroll-submit-btn-text">Lancer l'enregistrement</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script>
+        // =========================================================================
+        // JAVASCRIPT: Pointages & Biometric Enrollment
+        // =========================================================================
+
+        let enrollDataCache = { students: [], users: [] };
+        let activeEnrollTab = 'student';
+        let selectedEnrollPerson = null;
+        let pointagesDebounceTimer = null;
+
+        function openPointagesModal() {
+            const modal = document.getElementById('pointages-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            fetchPointages();
+        }
+
+        function closePointagesModal() {
+            const modal = document.getElementById('pointages-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function clearPointagesDateFilter() {
+            const dateInput = document.getElementById('pointages-date-input');
+            if (dateInput) dateInput.value = '';
+            fetchPointages();
+        }
+
+        function debounceFetchPointages() {
+            clearTimeout(pointagesDebounceTimer);
+            pointagesDebounceTimer = setTimeout(fetchPointages, 300);
+        }
+
+        async function fetchPointages() {
+            const container = document.getElementById('pointages-list-container');
+            const refreshIcon = document.getElementById('pointages-refresh-icon');
+            const searchInput = document.getElementById('pointages-search-input');
+            const dateInput = document.getElementById('pointages-date-input');
+            const countBadge = document.getElementById('pointages-count-badge');
+
+            const search = searchInput ? searchInput.value : '';
+            const date = dateInput ? dateInput.value : '';
+
+            if (refreshIcon) refreshIcon.classList.add('animate-spin');
+
+            try {
+                const params = new URLSearchParams();
+                if (search) params.append('search', search);
+                if (date) params.append('date', date);
+
+                const response = await fetch(`/biometric/pointages?${params.toString()}`, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!response.ok) throw new Error('Erreur lors du chargement des pointages');
+
+                const data = await response.json();
+                if (countBadge) countBadge.textContent = `${data.total_count} pointage(s)`;
+
+                if (!data.grouped || data.grouped.length === 0) {
+                    container.innerHTML = `
+                        <div class="py-12 text-center">
+                            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 border border-indigo-100 dark:border-indigo-900/60 mb-3">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100">Aucun pointage trouvé</h4>
+                            <p class="text-xs text-slate-500 mt-1">Aucun enregistrement ne correspond aux critères ou aucun pointage n'a encore été synchronisé.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                data.grouped.forEach(group => {
+                    html += `
+                        <div class="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-800/40 shadow-sm overflow-hidden">
+                            <div class="px-5 py-3 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <svg class="h-4 w-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    <span class="text-xs font-bold text-slate-800 dark:text-slate-100 capitalize">${group.date_human}</span>
+                                </div>
+                                <span class="rounded-full bg-slate-200/70 dark:bg-slate-700 px-2 py-0.5 text-[10px] font-bold text-slate-700 dark:text-slate-200">${group.total} pointage(s)</span>
+                            </div>
+                            <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                    `;
+
+                    group.records.forEach(rec => {
+                        const isStudent = rec.type === 'student';
+                        const idBadgeColor = isStudent 
+                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/50 dark:text-indigo-300 dark:border-indigo-800'
+                            : 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800';
+
+                        html += `
+                            <div class="p-3.5 px-5 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 transition flex items-center justify-between gap-3 text-xs">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold text-xs ${isStudent ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-200' : 'bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-200'}">
+                                        ${rec.name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="font-bold text-slate-900 dark:text-slate-100 truncate">${rec.name}</span>
+                                            <span class="rounded px-2 py-0.5 font-mono text-[11px] font-bold border ${idBadgeColor}">${rec.identifier}</span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">${rec.type_label} · <span class="font-medium text-slate-600 dark:text-slate-300">${rec.device}</span></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3 shrink-0">
+                                    <div class="text-right">
+                                        <div class="font-mono font-bold text-xs text-slate-800 dark:text-slate-100 flex items-center gap-1.5 justify-end">
+                                            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                                            ${rec.time}
+                                        </div>
+                                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">${rec.status_label}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<div class="py-8 text-center text-xs text-rose-500">Erreur de chargement des pointages : ${err.message}</div>`;
+            } finally {
+                if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+            }
+        }
+
+        // =========================================================================
+        // Enrollment Modal Logic
+        // =========================================================================
+
+        async function openEnrollFingerprintModal() {
+            const modal = document.getElementById('enroll-fingerprint-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            resetEnrollSelection();
+            await loadEnrollData();
+        }
+
+        function closeEnrollFingerprintModal() {
+            const modal = document.getElementById('enroll-fingerprint-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            resetEnrollSelection();
+        }
+
+        function resetEnrollSelection() {
+            selectedEnrollPerson = null;
+            const card = document.getElementById('enroll-selected-card');
+            const statusBox = document.getElementById('enroll-live-status');
+            const deleteBtn = document.getElementById('enroll-delete-btn');
+            const submitBtn = document.getElementById('enroll-submit-btn');
+            const submitText = document.getElementById('enroll-submit-btn-text');
+
+            if (card) card.classList.add('hidden');
+            if (statusBox) statusBox.classList.add('hidden');
+            if (deleteBtn) deleteBtn.classList.add('hidden');
+            if (submitBtn) submitBtn.disabled = true;
+            if (submitText) submitText.textContent = "Lancer l'enregistrement";
+        }
+
+        async function loadEnrollData() {
+            const listEl = document.getElementById('enroll-person-list');
+            if (!listEl) return;
+            listEl.innerHTML = '<div class="py-8 text-center text-xs text-slate-400">Chargement des élèves et personnels...</div>';
+
+            try {
+                const res = await fetch('/biometric/enroll-data', {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!res.ok) throw new Error('Erreur de chargement des données biométriques');
+                enrollDataCache = await res.json();
+
+                const countStudents = document.getElementById('count-enroll-students');
+                const countUsers = document.getElementById('count-enroll-users');
+                if (countStudents) countStudents.textContent = (enrollDataCache.students || []).length;
+                if (countUsers) countUsers.textContent = (enrollDataCache.users || []).length;
+
+                renderEnrollPersons();
+            } catch (e) {
+                listEl.innerHTML = `<div class="py-6 text-center text-xs text-rose-500">${e.message}</div>`;
+            }
+        }
+
+        function switchEnrollTab(tab) {
+            activeEnrollTab = tab;
+            const btnStudents = document.getElementById('tab-enroll-students');
+            const btnUsers = document.getElementById('tab-enroll-users');
+
+            if (tab === 'student') {
+                if (btnStudents) btnStudents.className = 'flex-1 rounded-lg py-2 text-xs font-bold transition bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-sm';
+                if (btnUsers) btnUsers.className = 'flex-1 rounded-lg py-2 text-xs font-bold transition text-slate-500 dark:text-slate-400 hover:text-slate-800';
+            } else {
+                if (btnUsers) btnUsers.className = 'flex-1 rounded-lg py-2 text-xs font-bold transition bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-sm';
+                if (btnStudents) btnStudents.className = 'flex-1 rounded-lg py-2 text-xs font-bold transition text-slate-500 dark:text-slate-400 hover:text-slate-800';
+            }
+
+            resetEnrollSelection();
+            renderEnrollPersons();
+        }
+
+        function filterEnrollPersons() {
+            renderEnrollPersons();
+        }
+
+        function renderEnrollPersons() {
+            const listEl = document.getElementById('enroll-person-list');
+            if (!listEl) return;
+            const searchInput = document.getElementById('enroll-search-input');
+            const search = (searchInput ? searchInput.value : '').toLowerCase();
+            const source = activeEnrollTab === 'student' ? enrollDataCache.students : enrollDataCache.users;
+
+            const filtered = (source || []).filter(p => {
+                return (p.name && p.name.toLowerCase().includes(search))
+                    || (p.identifier && p.identifier.toLowerCase().includes(search))
+                    || (p.sub && p.sub.toLowerCase().includes(search));
+            });
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = '<div class="py-8 text-center text-xs text-slate-400">Aucun résultat trouvé.</div>';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(p => {
+                const isSelected = selectedEnrollPerson && selectedEnrollPerson.id === p.id && selectedEnrollPerson.type === p.type;
+                const isEnrolled = p.is_enrolled;
+
+                const escapedPerson = JSON.stringify(p).replace(/'/g, "&#39;");
+
+                html += `
+                    <div onclick='selectEnrollPerson(${escapedPerson})' class="group flex items-center justify-between gap-3 p-2.5 rounded-xl border cursor-pointer transition ${isSelected ? 'border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/40' : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800'}">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-bold text-xs ${p.type === 'student' ? 'bg-indigo-100 text-indigo-700' : 'bg-purple-100 text-purple-700'}">
+                                ${p.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">${p.name}</span>
+                                    <span class="rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">${p.identifier}</span>
+                                </div>
+                                <p class="text-[10px] text-slate-400 truncate">${p.sub}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            ${isEnrolled 
+                                ? '<span class="rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Déjà enregistré</span>' 
+                                : '<span class="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-medium text-slate-500">Non enregistré</span>'}
+                        </div>
+                    </div>
+                `;
+            });
+
+            listEl.innerHTML = html;
+        }
+
+        function selectEnrollPerson(person) {
+            selectedEnrollPerson = person;
+            renderEnrollPersons();
+
+            const card = document.getElementById('enroll-selected-card');
+            if (card) card.classList.remove('hidden');
+
+            const avatar = document.getElementById('enroll-selected-avatar');
+            const nameEl = document.getElementById('enroll-selected-name');
+            const idEl = document.getElementById('enroll-selected-id');
+            const subEl = document.getElementById('enroll-selected-sub');
+            const instId = document.getElementById('enroll-instruction-id');
+
+            if (avatar) avatar.textContent = person.name.charAt(0).toUpperCase();
+            if (nameEl) nameEl.textContent = person.name;
+            if (idEl) idEl.textContent = person.identifier;
+            if (subEl) subEl.textContent = person.sub;
+            if (instId) instId.textContent = person.identifier;
+
+            const badgeEl = document.getElementById('enroll-selected-status-badge');
+            const submitBtn = document.getElementById('enroll-submit-btn');
+            const submitText = document.getElementById('enroll-submit-btn-text');
+            const deleteBtn = document.getElementById('enroll-delete-btn');
+
+            if (submitBtn) submitBtn.disabled = false;
+
+            if (person.is_enrolled) {
+                if (badgeEl) badgeEl.innerHTML = '<span class="rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-1 text-xs font-bold border border-emerald-300">Déjà enregistré</span>';
+                if (submitText) submitText.textContent = "Ré-enregistrer l'empreinte";
+                if (deleteBtn) deleteBtn.classList.remove('hidden');
+            } else {
+                if (badgeEl) badgeEl.innerHTML = '<span class="rounded-full bg-amber-100 text-amber-800 px-2.5 py-1 text-xs font-bold border border-amber-300">Non enregistré</span>';
+                if (submitText) submitText.textContent = "Lancer l'enregistrement";
+                if (deleteBtn) deleteBtn.classList.add('hidden');
+            }
+
+            const liveStatus = document.getElementById('enroll-live-status');
+            if (liveStatus) liveStatus.classList.add('hidden');
+        }
+
+        async function submitEnrollment() {
+            if (!selectedEnrollPerson) return;
+
+            const submitBtn = document.getElementById('enroll-submit-btn');
+            const statusBox = document.getElementById('enroll-live-status');
+            const statusTitle = document.getElementById('enroll-live-status-title');
+            const statusDesc = document.getElementById('enroll-live-status-desc');
+            const spinner = document.getElementById('enroll-status-spinner');
+
+            if (submitBtn) submitBtn.disabled = true;
+            if (statusBox) statusBox.className = 'rounded-xl border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/50 dark:bg-indigo-950/30 p-4 transition-all block';
+            if (spinner) {
+                spinner.className = 'h-6 w-6 shrink-0 animate-spin text-indigo-600';
+                spinner.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>';
+            }
+            if (statusTitle) statusTitle.textContent = "Communication avec la pointeuse ZKTeco...";
+            if (statusDesc) statusDesc.textContent = `Transmission de l'ID ${selectedEnrollPerson.identifier} vers 192.168.0.201. Posez votre doigt 3 fois sur le capteur...`;
+
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                const response = await fetch('/biometric/enroll', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({
+                        entity_type: selectedEnrollPerson.type,
+                        entity_id: selectedEnrollPerson.id,
+                        finger_index: 0
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || "Erreur lors de l'enrôlement");
+                }
+
+                if (statusBox) statusBox.className = 'rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 p-4 transition-all block';
+                if (spinner) {
+                    spinner.className = 'h-6 w-6 shrink-0 text-emerald-600';
+                    spinner.innerHTML = '<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+                }
+                if (statusTitle) statusTitle.textContent = "Empreinte biométrique enregistrée avec succès !";
+                if (statusDesc) statusDesc.textContent = data.message;
+
+                // Mark enrolled in cache and refresh
+                selectedEnrollPerson.is_enrolled = true;
+                const source = selectedEnrollPerson.type === 'student' ? enrollDataCache.students : enrollDataCache.users;
+                const found = source.find(p => p.id === selectedEnrollPerson.id);
+                if (found) found.is_enrolled = true;
+
+                selectEnrollPerson(selectedEnrollPerson);
+                renderEnrollPersons();
+
+            } catch (err) {
+                if (statusBox) statusBox.className = 'rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 p-4 transition-all block';
+                if (spinner) {
+                    spinner.className = 'h-6 w-6 shrink-0 text-rose-600';
+                    spinner.innerHTML = '<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+                }
+                if (statusTitle) statusTitle.textContent = "Statut de l'enregistrement";
+                if (statusDesc) statusDesc.textContent = err.message;
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        }
+
+        async function deleteSelectedFingerprint() {
+            if (!selectedEnrollPerson) return;
+            if (!confirm(`Confirmez-vous la suppression de l'empreinte pour ${selectedEnrollPerson.name} (${selectedEnrollPerson.identifier}) ?`)) {
+                return;
+            }
+
+            const deleteBtn = document.getElementById('enroll-delete-btn');
+            if (deleteBtn) deleteBtn.disabled = true;
+
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                const response = await fetch('/biometric/user', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: JSON.stringify({ identifier: selectedEnrollPerson.identifier })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) throw new Error(data.message || 'Erreur');
+
+                alert(data.message);
+
+                // Update cache
+                selectedEnrollPerson.is_enrolled = false;
+                const source = selectedEnrollPerson.type === 'student' ? enrollDataCache.students : enrollDataCache.users;
+                const found = source.find(p => p.id === selectedEnrollPerson.id);
+                if (found) found.is_enrolled = false;
+
+                selectEnrollPerson(selectedEnrollPerson);
+                renderEnrollPersons();
+            } catch (err) {
+                alert("Erreur de suppression : " + err.message);
+            } finally {
+                if (deleteBtn) deleteBtn.disabled = false;
+            }
+        }
+
         // Modal functions
         async function showPersonDetails(type, id) {
             const modal = document.getElementById('details-modal');

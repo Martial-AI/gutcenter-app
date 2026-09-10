@@ -179,6 +179,14 @@ class UserController extends Controller
     {
         $this->authorizeAdmin(); $this->confirmAdminPassword($request);
         abort_if($user->is(auth()->user()), 422, __('You cannot delete your own account.'));
+        if ($user->professional_number) {
+            try {
+                \App\Models\FingerprintRegistration::where('identifier', $user->professional_number)->delete();
+                (new \App\Services\ZKTecoService())->deleteUser($user->professional_number);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('ZKTeco delete failed for user ' . $user->professional_number . ': ' . $e->getMessage());
+            }
+        }
         TrashService::store('user', $user, 'Compte : '.$user->name, ['roles' => $user->getRoleNames()->all(), 'permissions' => $user->getDirectPermissions()->pluck('name')->all()]);
         $this->record($user, 'a supprimé le compte '.$user->name);
         SensitiveActivityNotifier::send('Compte supprimé', 'Le compte '.$user->name.' a été supprimé définitivement.');

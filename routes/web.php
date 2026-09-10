@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\TrashController;
 use App\Http\Controllers\TeachingProgramController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\BiometricController;
 use App\Models\Invoice;
 use App\Models\Student;
 use App\Models\Attendance;
@@ -111,6 +112,14 @@ Route::middleware(['auth'])->group(function (): void {
     Route::post('attendance', [AttendanceController::class, 'store'])->name('attendance.store');
     Route::post('attendance/sync-device', [AttendanceController::class, 'syncDevice'])->name('attendance.sync-device');
     Route::get('attendance/details/{type}/{id}', [AttendanceController::class, 'details'])->name('attendance.details');
+
+    Route::prefix('biometric')->name('biometric.')->group(function () {
+        Route::get('enroll-data', [BiometricController::class, 'enrollData'])->name('enroll-data');
+        Route::post('enroll', [BiometricController::class, 'enroll'])->name('enroll');
+        Route::delete('user', [BiometricController::class, 'destroy'])->name('destroy');
+        Route::get('pointages', [BiometricController::class, 'pointages'])->name('pointages');
+        Route::get('test-connection', [BiometricController::class, 'testConnection'])->name('test-connection');
+    });
 });
 
 Route::get('/dashboard', function () {

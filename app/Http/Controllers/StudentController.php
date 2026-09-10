@@ -373,6 +373,14 @@ class StudentController extends Controller
             throw ValidationException::withMessages(['password_confirmation_action' => __('The password is incorrect.')]);
         }
         $name = $student->first_name.' '.$student->last_name;
+        if ($student->student_number) {
+            try {
+                \App\Models\FingerprintRegistration::where('identifier', $student->student_number)->delete();
+                (new \App\Services\ZKTecoService())->deleteUser($student->student_number);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('ZKTeco delete failed for student ' . $student->student_number . ': ' . $e->getMessage());
+            }
+        }
         TrashService::store('student', $student, 'Élève : '.$name);
         activity('eleves')->causedBy(auth()->user())->performedOn($student)->log('a supprimé définitivement l’élève '.$name);
         SensitiveActivityNotifier::send('Élève supprimé', 'La fiche de l’élève '.$name.' a été supprimée définitivement.');

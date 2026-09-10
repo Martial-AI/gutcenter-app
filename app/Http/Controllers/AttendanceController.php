@@ -425,7 +425,7 @@ class AttendanceController extends Controller
     {
         abort_unless(auth()->user()?->can('attendance.manage') || auth()->user()?->can('roles.manage'), 403);
 
-        $ip = $request->input('ip', '192.168.1.201');
+        $ip = $request->input('ip', config('services.zkteco.ip', '192.168.0.201'));
         $zk = new \App\Services\ZKTecoService($ip);
         $result = $zk->syncToDatabase('ZKTeco-ZK3969');
 
