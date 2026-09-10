@@ -61,13 +61,11 @@
                 {{ __("Toutes les sessions actives de cet utilisateur ont été révoquées. Vous pouvez consulter ce profil et réactiver le compte à tout moment depuis le module de gestion des utilisateurs.") }}
             </p>
 
-            @if (Route::has('admin.users.index'))
-                <div class="btn-wrapper">
-                    <a href="{{ route('admin.users.index') }}" class="btn">
-                        {{ __('Gérer les utilisateurs dans l’Admin') }}
-                    </a>
-                </div>
-            @endif
+            <div class="btn-wrapper">
+                <a href="{{ $adminUsersUrl ?? 'https://gutcenter.taila5e2fd.ts.net/admin/users' }}" class="btn">
+                    {{ __('Gérer les utilisateurs dans l’Admin') }}
+                </a>
+            </div>
         </div>
 
         <div class="footer">

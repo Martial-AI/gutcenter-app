@@ -67,13 +67,11 @@
                 {{ __("Si vous n'êtes pas à l'origine de ces tentatives de connexion, nous vous conseillons vivement de réinitialiser votre mot de passe dès maintenant pour sécuriser l'accès à l'application.") }}
             </div>
 
-            @if (Route::has('password.request'))
-                <div class="btn-wrapper">
-                    <a href="{{ route('password.request') }}" class="btn">
-                        {{ __('Réinitialiser mon mot de passe') }}
-                    </a>
-                </div>
-            @endif
+            <div class="btn-wrapper">
+                <a href="{{ $resetUrl ?? 'https://gutcenter.taila5e2fd.ts.net/forgot-password' }}" class="btn">
+                    {{ __('Réinitialiser mon mot de passe') }}
+                </a>
+            </div>
         </div>
 
         <div class="footer">

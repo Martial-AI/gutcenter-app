@@ -34,6 +34,7 @@ class AuthSecurityNotifier
                 'ip' => $ip,
                 'date' => $date,
                 'browser' => $browser,
+                'resetUrl' => 'https://gutcenter.taila5e2fd.ts.net/forgot-password',
             ], function ($message) use ($admin): void {
                 $message->to($admin->email)
                     ->subject(__('[GUT Center] Alerte de sécurité : 5 tentatives de connexion échouées'));
@@ -86,6 +87,7 @@ class AuthSecurityNotifier
                     'ip' => $ip,
                     'date' => $date,
                     'browser' => $browser,
+                    'adminUsersUrl' => 'https://gutcenter.taila5e2fd.ts.net/admin/users',
                 ], function ($message) use ($admin, $suspendedUser): void {
                     $message->to($admin->email)
                         ->subject(__('[GUT Center] Alerte Sécurité : Compte :name suspendu automatiquement', ['name' => $suspendedUser->name]));
