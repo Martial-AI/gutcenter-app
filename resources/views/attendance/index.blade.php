@@ -6,18 +6,21 @@
                 <p class="mt-0.5 text-xs text-slate-500">{{ __('Comprehensive analytics: attendance rates, financial forecasts, student distribution and biometric logs.') }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-2.5">
-                <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200/80 shadow-sm">
-                    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    {{ __('Biometric Terminal Active') }}
+                <span id="device-status-badge" class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200/80 shadow-sm cursor-pointer hover:bg-emerald-100 transition" onclick="openDeviceSettingsModal()" title="{{ __('Click to configure device') }}">
+                    <span id="device-status-dot" class="h-2 w-2 rounded-full bg-slate-400"></span>
+                    <span id="device-status-text">{{ __('Biometric Terminal') }}...</span>
                 </span>
-                <button type="button" onclick="openPointagesModal()" class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 transition active:scale-95">
-                    <svg class="h-4 w-4 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>{{ __('Pointages') }}</span>
+                <button type="button" onclick="openPointagesModal()" class="inline-flex items-center gap-1.5 rounded-xl bg-violet-50 border border-violet-200/90 px-3.5 py-2 text-xs font-bold text-violet-700 shadow-sm hover:bg-violet-100 hover:border-violet-300 hover:text-violet-800 transition active:scale-95">
+                    <svg class="h-4 w-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>{{ __('Punch Logs') }}</span>
                 </button>
                 @can('attendance.manage')
                     <button type="button" onclick="openEnrollFingerprintModal()" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 transition active:scale-95">
                         <svg class="h-4 w-4 text-emerald-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004.07 9.294M15 11a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m-2-2h4"/></svg>
-                        <span>{{ __('Ajouter une empreinte') }}</span>
+                        <span>{{ __('Add Fingerprint') }}</span>
+                    </button>
+                    <button type="button" onclick="openDeviceSettingsModal()" class="inline-flex items-center justify-center rounded-xl bg-white border border-slate-200 px-2.5 py-2 text-xs font-semibold text-slate-600 shadow-sm hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 transition active:scale-95" title="{{ __('Configure ZKTeco Device') }}">
+                        <svg class="h-4 w-4 text-slate-600 hover:rotate-45 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
                     </button>
                     <form id="sync-zkteco-form" method="POST" action="{{ route('attendance.sync-device') }}" class="inline-flex" onsubmit="handleSyncDevice(event, this)">
                         @csrf
@@ -840,17 +843,17 @@
     <div id="pointages-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-3 sm:p-4 transition-all">
         <div class="relative w-full max-w-4xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <!-- Header -->
-            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-gradient-to-r from-violet-900 via-indigo-900 to-slate-900 text-white">
                 <div class="flex items-center gap-3">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 shadow-inner">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-violet-200 border border-white/20 shadow-inner">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
                     <div>
                         <div class="flex items-center gap-2">
-                            <h3 class="text-base font-bold text-white">Pointages & Historique Biométrique</h3>
-                            <span id="pointages-count-badge" class="rounded-full bg-indigo-500/30 px-2.5 py-0.5 text-xs font-semibold text-indigo-200 border border-indigo-400/30">0 pointage(s)</span>
+                            <h3 class="text-base font-bold text-white">{{ __('Punch Logs & Biometric History') }}</h3>
+                            <span id="pointages-count-badge" class="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold text-violet-100 border border-white/20">0 {{ __('punch(es)') }}</span>
                         </div>
-                        <p class="text-xs text-slate-300">Tous les pointages en direct groupés par date avec heure précise du pointeur</p>
+                        <p class="text-xs text-slate-300">{{ __('All live punches grouped by date with precise timestamps from the terminal') }}</p>
                     </div>
                 </div>
                 <button type="button" onclick="closePointagesModal()" class="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white transition">
@@ -863,15 +866,15 @@
                 <div class="flex flex-wrap items-center gap-2.5 flex-1 min-w-[260px]">
                     <div class="relative flex-1 max-w-sm">
                         <svg class="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        <input type="text" id="pointages-search-input" oninput="debounceFetchPointages()" placeholder="Rechercher nom, élève ST26-..., personnel PA26-..." class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 pl-9 pr-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                        <input type="text" id="pointages-search-input" oninput="debounceFetchPointages()" placeholder="{{ __('Search by name, student ID, staff ID...') }}" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 pl-9 pr-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-violet-500 focus:ring-1 focus:ring-violet-500">
                     </div>
-                    <input type="date" id="pointages-date-input" onchange="fetchPointages()" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" title="Filtrer par date">
-                    <button type="button" onclick="clearPointagesDateFilter()" class="text-xs text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 font-medium">Toutes les dates</button>
+                    <input type="date" id="pointages-date-input" onchange="fetchPointages()" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs text-slate-800 dark:text-slate-100 focus:border-violet-500 focus:ring-1 focus:ring-violet-500" title="{{ __('Filter by date') }}">
+                    <button type="button" onclick="clearPointagesDateFilter()" class="text-xs text-slate-500 hover:text-violet-600 dark:text-slate-400 dark:hover:text-violet-400 font-medium">{{ __('All Dates') }}</button>
                 </div>
                 <div class="flex items-center gap-2">
                     <button type="button" onclick="fetchPointages()" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 transition shadow-sm active:scale-95">
-                        <svg id="pointages-refresh-icon" class="h-3.5 w-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                        <span>Actualiser</span>
+                        <svg id="pointages-refresh-icon" class="h-3.5 w-3.5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        <span>{{ __('Refresh') }}</span>
                     </button>
                 </div>
             </div>
@@ -884,11 +887,12 @@
             <!-- Footer -->
             <div class="border-t border-slate-100 dark:border-slate-800 px-6 py-3 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-between text-xs text-slate-500">
                 <span class="flex items-center gap-1.5">
-                    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Terminal ZKTeco à <span class="font-mono font-semibold text-slate-700 dark:text-slate-300">192.168.0.201:4370</span>
+                    <span id="pointages-device-dot" class="h-2 w-2 rounded-full bg-slate-400"></span>
+                    {{ __('ZKTeco Terminal at') }} <span id="pointages-device-ip" class="font-mono font-semibold text-slate-700 dark:text-slate-300 ml-1">...</span>
+                    <button type="button" onclick="openDeviceSettingsModal()" class="ml-2 text-violet-600 hover:underline font-medium">{{ __('Configure') }}</button>
                 </span>
                 <button type="button" onclick="closePointagesModal()" class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 transition">
-                    Fermer
+                    {{ __('Close') }}
                 </button>
             </div>
         </div>
@@ -907,9 +911,9 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-white flex items-center gap-2">
-                            Ajouter une Empreinte Biométrique
+                            {{ __('Add Biometric Fingerprint') }}
                         </h3>
-                        <p class="text-xs text-emerald-100">Enrôlement direct sur le pointeur ZKTeco (192.168.0.201)</p>
+                        <p class="text-xs text-emerald-100">{{ __('Direct enrollment on the ZKTeco terminal') }} (<span id="enroll-device-ip">...</span>)</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeEnrollFingerprintModal()" class="rounded-lg p-2 text-white/70 hover:bg-white/10 hover:text-white transition">
@@ -922,22 +926,22 @@
                 <!-- Type selection tabs -->
                 <div class="flex items-center rounded-xl bg-slate-100 dark:bg-slate-800 p-1 border border-slate-200 dark:border-slate-700">
                     <button type="button" id="tab-enroll-students" onclick="switchEnrollTab('student')" class="flex-1 rounded-lg py-2 text-xs font-bold transition bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 shadow-sm">
-                        Élèves (<span id="count-enroll-students">0</span>)
+                        {{ __('Students') }} (<span id="count-enroll-students">0</span>)
                     </button>
                     <button type="button" id="tab-enroll-users" onclick="switchEnrollTab('user')" class="flex-1 rounded-lg py-2 text-xs font-bold transition text-slate-500 dark:text-slate-400 hover:text-slate-800">
-                        Personnels : Profs, Admin, etc. (<span id="count-enroll-users">0</span>)
+                        {{ __('Staff: Teachers, Admin, etc.') }} (<span id="count-enroll-users">0</span>)
                     </button>
                 </div>
 
                 <!-- Search box -->
                 <div class="relative">
                     <svg class="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" id="enroll-search-input" oninput="filterEnrollPersons()" placeholder="Rechercher par nom ou identifiant (ex: ST26-..., PA26-...)..." class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                    <input type="text" id="enroll-search-input" oninput="filterEnrollPersons()" placeholder="{{ __('Search by name or ID (e.g. ST26-..., PA26-...)') }}" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
                 </div>
 
                 <!-- Persons scrollable select list -->
                 <div class="space-y-1.5 max-h-56 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 p-2 bg-slate-50/50 dark:bg-slate-900/50" id="enroll-person-list">
-                    <div class="py-8 text-center text-xs text-slate-400">Chargement des élèves et personnels...</div>
+                    <div class="py-8 text-center text-xs text-slate-400">{{ __('Loading students and staff...') }}</div>
                 </div>
 
                 <!-- Selected Person Preview Card -->
@@ -961,12 +965,12 @@
                     <div class="mt-3.5 rounded-lg bg-white dark:bg-slate-800/80 p-3 border border-emerald-100 dark:border-emerald-900/40 text-xs space-y-1">
                         <div class="font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
                             <svg class="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            Instructions d'enregistrement :
+                            {{ __('Enrollment instructions') }}:
                         </div>
                         <p class="text-slate-600 dark:text-slate-300">
-                            1. Cliquez sur <strong class="text-emerald-700 dark:text-emerald-400">« Lancer l'enregistrement »</strong> ci-dessous.<br>
-                            2. L'identifiant <strong class="font-mono text-emerald-700 dark:text-emerald-300" id="enroll-instruction-id">...</strong> sera transmis au pointeur ZKTeco (192.168.0.201).<br>
-                            3. L'élève ou le personnel pose son doigt <strong>3 fois</strong> consécutives sur le capteur quand la lumière s'allume.
+                            1. {{ __('Click') }} <strong class="text-emerald-700 dark:text-emerald-400">« {{ __('Start Enrollment') }} »</strong> {{ __('below') }}.<br>
+                            2. {{ __('The ID') }} <strong class="font-mono text-emerald-700 dark:text-emerald-300" id="enroll-instruction-id">...</strong> {{ __('will be sent to the ZKTeco terminal') }} (<span class="font-mono" id="enroll-device-ip-instr">...</span>).<br>
+                            3. {{ __('The person places their finger') }} <strong>3 {{ __('times') }}</strong> {{ __('on the sensor when the light turns on') }}.
                         </p>
                     </div>
                 </div>
@@ -978,8 +982,8 @@
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         </div>
                         <div>
-                            <h5 class="text-xs font-bold" id="enroll-live-status-title">Communication en cours...</h5>
-                            <p class="text-xs mt-0.5 text-slate-600 dark:text-slate-300" id="enroll-live-status-desc">Envoi de la commande d'enrôlement vers la pointeuse...</p>
+                            <h5 class="text-xs font-bold" id="enroll-live-status-title">{{ __('Communicating...') }}</h5>
+                            <p class="text-xs mt-0.5 text-slate-600 dark:text-slate-300" id="enroll-live-status-desc">{{ __('Sending enrollment command to the terminal...') }}</p>
                         </div>
                     </div>
                 </div>
@@ -988,15 +992,80 @@
             <!-- Footer -->
             <div class="border-t border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between gap-3">
                 <button type="button" onclick="closeEnrollFingerprintModal()" class="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition">
-                    Fermer
+                    {{ __('Close') }}
                 </button>
                 <div class="flex items-center gap-2">
                     <button type="button" id="enroll-delete-btn" onclick="deleteSelectedFingerprint()" class="hidden rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 px-3.5 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300 hover:bg-rose-100 transition active:scale-95">
-                        Supprimer l'empreinte
+                        {{ __('Delete Fingerprint') }}
                     </button>
                     <button type="button" id="enroll-submit-btn" disabled onclick="submitEnrollment()" class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004.07 9.294M15 11a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m-2-2h4"/></svg>
-                        <span id="enroll-submit-btn-text">Lancer l'enregistrement</span>
+                        <span id="enroll-submit-btn-text">{{ __('Start Enrollment') }}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODAL 3: ZKTeco Device Settings / Connection                              -->
+    <!-- ========================================================================= -->
+    <div id="device-settings-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-3 sm:p-4">
+        <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-slate-800 to-slate-900 text-white">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-slate-200 border border-white/20">
+                        <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white">{{ __('ZKTeco Terminal Configuration') }}</h3>
+                        <p class="text-xs text-slate-400">{{ __('Enter IP and Port of the fingerprint terminal') }}</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeDeviceSettingsModal()" class="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white transition">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Connection Status Banner -->
+            <div id="device-conn-banner" class="px-6 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3 bg-slate-50 dark:bg-slate-800/40">
+                <span id="device-conn-dot" class="h-3 w-3 rounded-full bg-slate-300 shrink-0"></span>
+                <div>
+                    <p class="text-xs font-bold" id="device-conn-label">{{ __('Status unknown') }}</p>
+                    <p class="text-[11px] text-slate-400" id="device-conn-detail">{{ __('Click "Test Connection" to check.') }}</p>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">{{ __('IP Address') }}</label>
+                        <input type="text" id="device-ip-input" placeholder="192.168.0.201" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs text-slate-800 dark:text-slate-100 font-mono focus:border-slate-500 focus:ring-1 focus:ring-slate-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">{{ __('Port') }}</label>
+                        <input type="number" id="device-port-input" placeholder="4370" min="1" max="65535" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs text-slate-800 dark:text-slate-100 font-mono focus:border-slate-500 focus:ring-1 focus:ring-slate-500">
+                    </div>
+                </div>
+
+                <div id="device-save-result" class="hidden text-xs rounded-xl px-4 py-2.5 border"></div>
+            </div>
+
+            <!-- Footer -->
+            <div class="border-t border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-between gap-2">
+                <button type="button" onclick="testDeviceConnection()" id="device-test-btn" class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-700 px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95">
+                    <svg id="device-test-icon" class="h-3.5 w-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <span id="device-test-text">{{ __('Test Connection') }}</span>
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeDeviceSettingsModal()" class="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition">
+                        {{ __('Cancel') }}
+                    </button>
+                    <button type="button" onclick="saveDeviceSettings()" id="device-save-btn" class="inline-flex items-center gap-1.5 rounded-xl bg-slate-800 px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-900 transition active:scale-95">
+                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span id="device-save-btn-text">{{ __('Save') }}</span>
                     </button>
                 </div>
             </div>
@@ -1014,6 +1083,219 @@
         let activeEnrollTab = 'student';
         let selectedEnrollPerson = null;
         let pointagesDebounceTimer = null;
+        let currentDeviceIp = '...';
+        let currentDevicePort = 4370;
+
+        // =========================================================================
+        // Device Status & Settings
+        // =========================================================================
+        async function loadDeviceStatus() {
+            try {
+                const res = await fetch('/biometric/device-settings', {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                currentDeviceIp = (data.ip || '192.168.0.201');
+                currentDevicePort = (data.port || 4370);
+
+                // Update all dynamic IP placeholders
+                document.querySelectorAll('#pointages-device-ip, #enroll-device-ip, #enroll-device-ip-instr').forEach(el => { if(el) el.textContent = currentDeviceIp + ':' + currentDevicePort; });
+
+                // Update status badge
+                const dot = document.getElementById('device-status-dot');
+                const text = document.getElementById('device-status-text');
+                const pdot = document.getElementById('pointages-device-dot');
+
+                if (data.online === true) {
+                    if (dot) { dot.className = 'h-2 w-2 rounded-full bg-emerald-500 animate-pulse'; }
+                    if (pdot) { pdot.className = 'h-2 w-2 rounded-full bg-emerald-500 animate-pulse'; }
+                    if (text) text.textContent = '{{ __('Terminal Online') }}';
+                } else {
+                    if (dot) { dot.className = 'h-2 w-2 rounded-full bg-rose-500'; }
+                    if (pdot) { pdot.className = 'h-2 w-2 rounded-full bg-rose-500'; }
+                    if (text) text.textContent = '{{ __('Terminal Offline') }}';
+                }
+            } catch(e) {
+                console.warn('Device status check failed:', e);
+            }
+        }
+
+        function openDeviceSettingsModal() {
+            const modal = document.getElementById('device-settings-modal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // Pre-fill fields
+            const ipInput = document.getElementById('device-ip-input');
+            const portInput = document.getElementById('device-port-input');
+            if (ipInput) ipInput.value = currentDeviceIp !== '...' ? currentDeviceIp : '';
+            if (portInput) portInput.value = currentDevicePort || 4370;
+
+            // Reset result
+            const result = document.getElementById('device-save-result');
+            if (result) { result.className = 'hidden'; result.textContent = ''; }
+
+            // Load fresh status into banner
+            updateDeviceBanner(null);
+            testDeviceConnection(true);
+        }
+
+        function closeDeviceSettingsModal() {
+            const modal = document.getElementById('device-settings-modal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function updateDeviceBanner(online) {
+            const dot = document.getElementById('device-conn-dot');
+            const label = document.getElementById('device-conn-label');
+            const detail = document.getElementById('device-conn-detail');
+            const ipInput = document.getElementById('device-ip-input');
+            const portInput = document.getElementById('device-port-input');
+            const ip = (ipInput ? ipInput.value : currentDeviceIp) + ':' + (portInput ? portInput.value : currentDevicePort);
+
+            if (online === true) {
+                if (dot) dot.className = 'h-3 w-3 rounded-full bg-emerald-500 animate-pulse shrink-0';
+                if (label) { label.textContent = '{{ __('Online') }}'; label.className = 'text-xs font-bold text-emerald-700'; }
+                if (detail) detail.textContent = '{{ __('Terminal is reachable at') }} ' + ip;
+            } else if (online === false) {
+                if (dot) dot.className = 'h-3 w-3 rounded-full bg-rose-500 shrink-0';
+                if (label) { label.textContent = '{{ __('Offline / Unreachable') }}'; label.className = 'text-xs font-bold text-rose-700'; }
+                if (detail) detail.textContent = '{{ __('Cannot connect to terminal at') }} ' + ip;
+            } else {
+                if (dot) dot.className = 'h-3 w-3 rounded-full bg-slate-300 shrink-0 animate-pulse';
+                if (label) { label.textContent = '{{ __('Checking connection...') }}'; label.className = 'text-xs font-bold text-slate-600'; }
+                if (detail) detail.textContent = ip;
+            }
+        }
+
+        async function testDeviceConnection(silent = false) {
+            const testBtn = document.getElementById('device-test-btn');
+            const testIcon = document.getElementById('device-test-icon');
+            const testText = document.getElementById('device-test-text');
+            const ipInput = document.getElementById('device-ip-input');
+            const portInput = document.getElementById('device-port-input');
+
+            const ip = ipInput ? ipInput.value.trim() : currentDeviceIp;
+            const port = portInput ? portInput.value.trim() : currentDevicePort;
+
+            if (!ip) return;
+
+            if (testBtn) testBtn.disabled = true;
+            if (testIcon) testIcon.classList.add('animate-spin');
+            if (testText) testText.textContent = '{{ __('Testing...') }}';
+            updateDeviceBanner(null);
+
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                const res = await fetch('/biometric/device-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+                    body: JSON.stringify({ ip, port, test_only: true })
+                });
+                const data = await res.json();
+                updateDeviceBanner(data.online === true);
+
+                // Update global state
+                if (data.online === true) {
+                    const dot = document.getElementById('device-status-dot');
+                    const text = document.getElementById('device-status-text');
+                    const pdot = document.getElementById('pointages-device-dot');
+                    if (dot) dot.className = 'h-2 w-2 rounded-full bg-emerald-500 animate-pulse';
+                    if (pdot) pdot.className = 'h-2 w-2 rounded-full bg-emerald-500 animate-pulse';
+                    if (text) text.textContent = '{{ __('Terminal Online') }}';
+                } else {
+                    const dot = document.getElementById('device-status-dot');
+                    const text = document.getElementById('device-status-text');
+                    const pdot = document.getElementById('pointages-device-dot');
+                    if (dot) dot.className = 'h-2 w-2 rounded-full bg-rose-500';
+                    if (pdot) pdot.className = 'h-2 w-2 rounded-full bg-rose-500';
+                    if (text) text.textContent = '{{ __('Terminal Offline') }}';
+                }
+            } catch(e) {
+                updateDeviceBanner(false);
+            } finally {
+                if (testBtn) testBtn.disabled = false;
+                if (testIcon) testIcon.classList.remove('animate-spin');
+                if (testText) testText.textContent = '{{ __('Test Connection') }}';
+            }
+        }
+
+        async function saveDeviceSettings() {
+            const saveBtn = document.getElementById('device-save-btn');
+            const saveBtnText = document.getElementById('device-save-btn-text');
+            const resultEl = document.getElementById('device-save-result');
+            const ipInput = document.getElementById('device-ip-input');
+            const portInput = document.getElementById('device-port-input');
+
+            const ip = ipInput ? ipInput.value.trim() : '';
+            const port = portInput ? portInput.value.trim() : '';
+
+            if (!ip || !port) {
+                if (resultEl) {
+                    resultEl.className = 'text-xs rounded-xl px-4 py-2.5 border border-rose-200 bg-rose-50 text-rose-700';
+                    resultEl.textContent = '{{ __('Please enter a valid IP address and port.') }}';
+                }
+                return;
+            }
+
+            if (saveBtn) saveBtn.disabled = true;
+            if (saveBtnText) saveBtnText.textContent = '{{ __('Saving...') }}';
+
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                const res = await fetch('/biometric/device-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+                    body: JSON.stringify({ ip, port })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    currentDeviceIp = ip;
+                    currentDevicePort = parseInt(port);
+                    document.querySelectorAll('#pointages-device-ip, #enroll-device-ip, #enroll-device-ip-instr').forEach(el => { if(el) el.textContent = ip + ':' + port; });
+
+                    if (resultEl) {
+                        resultEl.className = 'text-xs rounded-xl px-4 py-2.5 border border-emerald-200 bg-emerald-50 text-emerald-700';
+                        resultEl.textContent = '{{ __('Settings saved successfully.') }}' + (data.online ? ' {{ __('Terminal is online.') }}' : ' {{ __('Terminal appears offline.') }}');
+                    }
+                    updateDeviceBanner(data.online);
+
+                    const dot = document.getElementById('device-status-dot');
+                    const text = document.getElementById('device-status-text');
+                    const pdot = document.getElementById('pointages-device-dot');
+                    if (data.online) {
+                        if (dot) dot.className = 'h-2 w-2 rounded-full bg-emerald-500 animate-pulse';
+                        if (pdot) pdot.className = 'h-2 w-2 rounded-full bg-emerald-500 animate-pulse';
+                        if (text) text.textContent = '{{ __('Terminal Online') }}';
+                    } else {
+                        if (dot) dot.className = 'h-2 w-2 rounded-full bg-rose-500';
+                        if (pdot) pdot.className = 'h-2 w-2 rounded-full bg-rose-500';
+                        if (text) text.textContent = '{{ __('Terminal Offline') }}';
+                    }
+                } else {
+                    if (resultEl) {
+                        resultEl.className = 'text-xs rounded-xl px-4 py-2.5 border border-rose-200 bg-rose-50 text-rose-700';
+                        resultEl.textContent = data.message || '{{ __('Error saving settings.') }}';
+                    }
+                }
+            } catch(e) {
+                if (resultEl) {
+                    resultEl.className = 'text-xs rounded-xl px-4 py-2.5 border border-rose-200 bg-rose-50 text-rose-700';
+                    resultEl.textContent = '{{ __('An error occurred. Please try again.') }}';
+                }
+            } finally {
+                if (saveBtn) saveBtn.disabled = false;
+                if (saveBtnText) saveBtnText.textContent = '{{ __('Save') }}';
+            }
+        }
+
+        // Load device status on page load
+        document.addEventListener('DOMContentLoaded', () => loadDeviceStatus());
 
         function openPointagesModal() {
             const modal = document.getElementById('pointages-modal');

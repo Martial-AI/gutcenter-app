@@ -311,13 +311,78 @@ class BiometricController extends Controller
     }
 
     /**
-     * Test connection to ZKTeco terminal.
+     * Get current ZKTeco terminal settings.
      */
-    public function testConnection(): JsonResponse
+    public function deviceSettings(): JsonResponse
     {
         abort_unless(auth()->user()?->can('attendance.manage') || auth()->user()?->can('roles.manage'), 403);
 
         $zk = new ZKTecoService();
+        $isOnline = $zk->testConnection();
+
+        return response()->json([
+            'ip' => $zk->getIp(),
+            'port' => $zk->getPort(),
+            'online' => $isOnline,
+        ]);
+    }
+
+    /**
+     * Update ZKTeco terminal settings (IP & port).
+     */
+    public function updateDeviceSettings(Request $request): JsonResponse
+    {
+        abort_unless(auth()->user()?->can('attendance.manage') || auth()->user()?->can('roles.manage'), 403);
+
+        $validated = $request->validate([
+            'ip'        => ['required', 'string', 'max:100'],
+            'port'      => ['required', 'integer', 'between:1,65535'],
+            'test_only' => ['sometimes', 'boolean'],
+        ]);
+
+        $ip       = trim($validated['ip']);
+        $port     = (int) $validated['port'];
+        $testOnly = (bool) ($validated['test_only'] ?? false);
+
+        // If test_only, just check connectivity — don't persist
+        if ($testOnly) {
+            $zk = new ZKTecoService($ip, $port);
+            $isOnline = $zk->testConnection();
+            return response()->json([
+                'online' => $isOnline,
+                'ip'     => $ip,
+                'port'   => $port,
+            ]);
+        }
+
+        \App\Models\Setting::set('zkteco_ip', $ip);
+        \App\Models\Setting::set('zkteco_port', $port);
+
+        $zk = new ZKTecoService($ip, $port);
+        $isOnline = $zk->testConnection();
+
+        return response()->json([
+            'success' => true,
+            'ip'      => $ip,
+            'port'    => $port,
+            'online'  => $isOnline,
+            'message' => $isOnline
+                ? "Configuration enregistrée et connexion réussie avec la pointeuse ({$ip}:{$port}) !"
+                : "Configuration enregistrée pour {$ip}:{$port}, mais la pointeuse est actuellement injoignable. Vérifiez le câble réseau ou l'alimentation.",
+        ]);
+    }
+
+    /**
+     * Test connection to ZKTeco terminal.
+     */
+    public function testConnection(Request $request): JsonResponse
+    {
+        abort_unless(auth()->user()?->can('attendance.manage') || auth()->user()?->can('roles.manage'), 403);
+
+        $ip = $request->input('ip');
+        $port = $request->input('port');
+
+        $zk = new ZKTecoService($ip ? trim($ip) : null, $port ? (int) $port : null);
         $isOnline = $zk->testConnection();
 
         return response()->json([

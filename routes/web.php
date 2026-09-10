@@ -119,6 +119,8 @@ Route::middleware(['auth'])->group(function (): void {
         Route::delete('user', [BiometricController::class, 'destroy'])->name('destroy');
         Route::get('pointages', [BiometricController::class, 'pointages'])->name('pointages');
         Route::get('test-connection', [BiometricController::class, 'testConnection'])->name('test-connection');
+        Route::get('device-settings', [BiometricController::class, 'deviceSettings'])->name('device-settings');
+        Route::post('device-settings', [BiometricController::class, 'updateDeviceSettings'])->name('update-device-settings');
     });
 });
 

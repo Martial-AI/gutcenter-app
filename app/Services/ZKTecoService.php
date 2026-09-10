@@ -45,8 +45,12 @@ class ZKTecoService
 
     public function __construct(?string $ip = null, ?int $port = null, ?int $timeout = null)
     {
-        $this->ip = $ip ?? config('services.zkteco.ip', '192.168.0.201');
-        $this->port = $port ?? (int) config('services.zkteco.port', 4370);
+        $this->ip = $ip 
+            ?: (\App\Models\Setting::get('zkteco_ip') 
+                ?: config('services.zkteco.ip', '192.168.0.201'));
+        $this->port = $port 
+            ?: (int) (\App\Models\Setting::get('zkteco_port') 
+                ?: config('services.zkteco.port', 4370));
         $this->timeout = $timeout ?? (int) config('services.zkteco.timeout', 5);
     }
 
