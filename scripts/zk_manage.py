@@ -80,7 +80,7 @@ def _decode_zk_time(t: int) -> str:
 
 
 # ---------------------------------------------------------------------------
-# ZKDevice — manages a single UDP session
+# ZKDevice — manages a UDP or TCP session (auto-detected)
 # ---------------------------------------------------------------------------
 
 class ZKDevice:
@@ -89,29 +89,78 @@ class ZKDevice:
         self.port = port
         self.timeout = timeout
         self.sock = None
+        self.use_tcp = False  # determined at connect time
         self.session_id = 0
         self.reply_id = 0
 
     def _send(self, data: bytes):
-        self.sock.sendto(data, (self.ip, self.port))
+        if self.use_tcp:
+            self.sock.sendall(data)
+        else:
+            self.sock.sendto(data, (self.ip, self.port))
 
     def _recv(self, size: int = 4096) -> bytes:
         try:
-            data, _ = self.sock.recvfrom(size)
-            return data
-        except socket.timeout:
+            if self.use_tcp:
+                data = self.sock.recv(size)
+            else:
+                data, _ = self.sock.recvfrom(size)
+            return data or b''
+        except (socket.timeout, OSError):
             return b''
 
+    def _try_connect_udp(self) -> bool:
+        """Try UDP connection (standard ZKTeco)."""
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.settimeout(self.timeout)
+            pkt = _build_packet(CMD_CONNECT, 0, 0)
+            s.sendto(pkt, (self.ip, self.port))
+            resp, _ = s.recvfrom(1024)
+            hdr = _parse_header(resp)
+            if hdr.get('command') == CMD_ACK_OK:
+                self.sock = s
+                self.use_tcp = False
+                self.session_id = hdr['session_id']
+                self.reply_id = 0
+                return True
+            s.close()
+        except Exception:
+            try:
+                s.close()
+            except Exception:
+                pass
+        return False
+
+    def _try_connect_tcp(self) -> bool:
+        """Try TCP connection (some ZKTeco firmware variants)."""
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(self.timeout)
+            s.connect((self.ip, self.port))
+            pkt = _build_packet(CMD_CONNECT, 0, 0)
+            s.sendall(pkt)
+            resp = s.recv(1024)
+            hdr = _parse_header(resp)
+            if hdr.get('command') == CMD_ACK_OK:
+                self.sock = s
+                self.use_tcp = True
+                self.session_id = hdr['session_id']
+                self.reply_id = 0
+                return True
+            s.close()
+        except Exception:
+            try:
+                s.close()
+            except Exception:
+                pass
+        return False
+
     def connect(self) -> bool:
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.settimeout(self.timeout)
-        pkt = _build_packet(CMD_CONNECT, 0, 0)
-        self._send(pkt)
-        resp = self._recv()
-        hdr = _parse_header(resp)
-        if hdr.get('command') == CMD_ACK_OK:
-            self.session_id = hdr['session_id']
-            self.reply_id = 0
+        """Try UDP first (standard), then TCP as fallback."""
+        if self._try_connect_udp():
+            return True
+        if self._try_connect_tcp():
             return True
         return False
 
@@ -254,16 +303,42 @@ class ZKDevice:
 # ---------------------------------------------------------------------------
 
 def test_connection(args) -> dict:
-    zk = ZKDevice(args.ip, args.port, timeout=5)
+    ip, port = args.ip, args.port
+    diag = {}
+
+    # 1. Check TCP reachability first (port open?)
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(5)
+        result = s.connect_ex((ip, port))
+        s.close()
+        diag['tcp_port_open'] = (result == 0)
+    except Exception as e:
+        diag['tcp_port_open'] = False
+        diag['tcp_error'] = str(e)
+
+    # 2. Try ZKTeco protocol connection (UDP then TCP)
+    zk = ZKDevice(ip, port, timeout=8)
     try:
         if zk.connect():
+            transport = 'TCP' if zk.use_tcp else 'UDP'
             zk.disconnect()
-            return {'success': True, 'online': True,
-                    'message': f'Connecté avec succès à {args.ip}:{args.port}'}
-        return {'success': False, 'online': False,
-                'message': f'Terminal injoignable ({args.ip}:{args.port})'}
+            return {
+                'success': True, 'online': True,
+                'transport': transport,
+                'message': f'Connecté avec succès à {ip}:{port} via {transport}',
+                'diag': diag,
+            }
     except Exception as e:
-        return {'success': False, 'online': False, 'message': f'Échec de connexion : {str(e)}'}
+        diag['zk_error'] = str(e)
+
+    msg = f'Terminal injoignable ({ip}:{port})'
+    if not diag.get('tcp_port_open'):
+        msg += ' — port TCP fermé ou hôte inaccessible depuis ce serveur.'
+    else:
+        msg += ' — port ouvert mais protocole ZKTeco non reconnu (essayez --port 4370).'
+
+    return {'success': False, 'online': False, 'message': msg, 'diag': diag}
 
 
 def enroll_user(args) -> dict:
