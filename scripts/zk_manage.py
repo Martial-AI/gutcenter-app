@@ -118,6 +118,7 @@ class ZKDevice:
             s.sendto(pkt, (self.ip, self.port))
             resp, _ = s.recvfrom(1024)
             hdr = _parse_header(resp)
+            sys.stderr.write(f"[UDP] sent={pkt.hex()} recv={resp.hex()} cmd={hdr.get('command')} sid={hdr.get('session_id')}\n")
             if hdr.get('command') == CMD_ACK_OK:
                 self.sock = s
                 self.use_tcp = False
@@ -125,7 +126,8 @@ class ZKDevice:
                 self.reply_id = 0
                 return True
             s.close()
-        except Exception:
+        except Exception as e:
+            sys.stderr.write(f"[UDP] exception: {e}\n")
             try:
                 s.close()
             except Exception:
@@ -142,6 +144,7 @@ class ZKDevice:
             s.sendall(pkt)
             resp = s.recv(1024)
             hdr = _parse_header(resp)
+            sys.stderr.write(f"[TCP] sent={pkt.hex()} recv={resp.hex()} cmd={hdr.get('command')} sid={hdr.get('session_id')}\n")
             if hdr.get('command') == CMD_ACK_OK:
                 self.sock = s
                 self.use_tcp = True
@@ -149,7 +152,8 @@ class ZKDevice:
                 self.reply_id = 0
                 return True
             s.close()
-        except Exception:
+        except Exception as e:
+            sys.stderr.write(f"[TCP] exception: {e}\n")
             try:
                 s.close()
             except Exception:
