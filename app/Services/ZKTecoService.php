@@ -83,11 +83,36 @@ class ZKTecoService
         }
 
         $candidates = PHP_OS_FAMILY === 'Windows'
-            ? ['python', 'py -3', 'C:\\Python314\\python.exe', 'C:\\Python311\\python.exe', 'C:\\Python310\\python.exe']
-            : ['python3', 'python', '/usr/bin/python3', '/usr/local/bin/python3'];
+            ? [
+                base_path('venv\\Scripts\\python.exe'),
+                base_path('.venv\\Scripts\\python.exe'),
+                'python',
+                'py -3',
+                'C:\\Python314\\python.exe',
+                'C:\\Python311\\python.exe',
+                'C:\\Python310\\python.exe',
+            ]
+            : [
+                base_path('venv/bin/python'),
+                base_path('venv/bin/python3'),
+                base_path('.venv/bin/python'),
+                'python3',
+                'python',
+                '/usr/bin/python3',
+                '/usr/local/bin/python3',
+            ];
 
+        // 1. First priority: find a python binary that has the 'zk' module installed
         foreach ($candidates as $bin) {
-            $check = @shell_exec($bin . ' --version 2>&1');
+            $check = @shell_exec(escapeshellcmd($bin) . ' -c "import zk; print(\'ZK_OK\')" 2>&1');
+            if ($check && str_contains($check, 'ZK_OK')) {
+                return $bin;
+            }
+        }
+
+        // 2. Fallback: find any functional python binary
+        foreach ($candidates as $bin) {
+            $check = @shell_exec(escapeshellcmd($bin) . ' --version 2>&1');
             if ($check && str_contains(strtolower($check), 'python')) {
                 return $bin;
             }
