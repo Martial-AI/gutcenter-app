@@ -38,6 +38,8 @@ tmp/
 /storage/*.key
 /storage/pail
 /vendor
+__pycache__/
+*.pyc
 _ide_helper.php
 Homestead.json
 Homestead.yaml

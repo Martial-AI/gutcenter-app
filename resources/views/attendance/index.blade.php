@@ -1581,12 +1581,16 @@
             if (submitBtn) submitBtn.disabled = false;
 
             if (person.is_enrolled) {
-                if (badgeEl) badgeEl.innerHTML = '<span class="rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-1 text-xs font-bold border border-emerald-300">Déjà enregistré</span>';
-                if (submitText) submitText.textContent = "Ré-enregistrer l'empreinte";
+                if (badgeEl) badgeEl.innerHTML = '<span class="rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 px-2.5 py-1 text-xs font-bold border border-emerald-300 dark:border-emerald-700">{{ __('Enrolled') }}</span>';
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> <span id="enroll-submit-btn-text">{{ __('Re-enroll Fingerprint') }}</span>';
+                }
                 if (deleteBtn) deleteBtn.classList.remove('hidden');
             } else {
-                if (badgeEl) badgeEl.innerHTML = '<span class="rounded-full bg-amber-100 text-amber-800 px-2.5 py-1 text-xs font-bold border border-amber-300">Non enregistré</span>';
-                if (submitText) submitText.textContent = "Lancer l'enregistrement";
+                if (badgeEl) badgeEl.innerHTML = '<span class="rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 px-2.5 py-1 text-xs font-bold border border-amber-300 dark:border-amber-700">{{ __('Not Enrolled') }}</span>';
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004.07 9.294M15 11a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m-2-2h4"/></svg> <span id="enroll-submit-btn-text">{{ __('Start Enrollment') }}</span>';
+                }
                 if (deleteBtn) deleteBtn.classList.add('hidden');
             }
 
@@ -1603,14 +1607,24 @@
             const statusDesc = document.getElementById('enroll-live-status-desc');
             const spinner = document.getElementById('enroll-status-spinner');
 
-            if (submitBtn) submitBtn.disabled = true;
-            if (statusBox) statusBox.className = 'rounded-xl border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/50 dark:bg-indigo-950/30 p-4 transition-all block';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<svg class="h-4 w-4 animate-spin shrink-0 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> <span>{{ __('Enrôlement en cours...') }}</span>';
+            }
+            if (statusBox) statusBox.className = 'rounded-xl border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/50 p-4 transition-all block shadow-sm';
             if (spinner) {
-                spinner.className = 'h-6 w-6 shrink-0 animate-spin text-indigo-600';
+                spinner.className = 'h-7 w-7 shrink-0 animate-spin text-indigo-600 dark:text-indigo-400';
                 spinner.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>';
             }
-            if (statusTitle) statusTitle.textContent = "Communication avec la pointeuse ZKTeco...";
-            if (statusDesc) statusDesc.textContent = `Transmission de l'ID ${selectedEnrollPerson.identifier} vers 192.168.0.201. Posez votre doigt 3 fois sur le capteur...`;
+            if (statusTitle) statusTitle.textContent = "{{ __('En attente de votre empreinte sur le pointeur...') }}";
+            if (statusDesc) {
+                statusDesc.innerHTML = `
+                    <div class="mt-1 space-y-1.5 text-xs text-indigo-950 dark:text-indigo-200">
+                        <p class="font-bold text-xs text-indigo-700 dark:text-indigo-300 animate-pulse">👉 {{ __('Posez votre doigt 3 fois consécutivement sur le capteur ZKTeco.') }}</p>
+                        <p class="text-[11px] text-slate-600 dark:text-slate-400">{{ __('Le capteur s\'allume et émet un signal sonore. Veuillez patienter jusqu\'à la validation finale...') }}</p>
+                    </div>
+                `;
+            }
 
             try {
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -1632,16 +1646,27 @@
                 const data = await response.json();
 
                 if (!response.ok || !data.success) {
-                    throw new Error(data.message || "Erreur lors de l'enrôlement");
+                    throw new Error(data.message || "{{ __('Erreur lors de l\'enrôlement') }}");
                 }
 
-                if (statusBox) statusBox.className = 'rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 p-4 transition-all block';
+                if (statusBox) statusBox.className = 'rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 p-4 transition-all block shadow-sm';
                 if (spinner) {
-                    spinner.className = 'h-6 w-6 shrink-0 text-emerald-600';
-                    spinner.innerHTML = '<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+                    spinner.className = 'h-7 w-7 shrink-0 text-emerald-600 dark:text-emerald-400';
+                    spinner.innerHTML = '<svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
                 }
-                if (statusTitle) statusTitle.textContent = "Empreinte biométrique enregistrée avec succès !";
-                if (statusDesc) statusDesc.textContent = data.message;
+                if (statusTitle) statusTitle.textContent = "{{ __('Empreinte biométrique enregistrée avec succès !') }}";
+                if (statusDesc) {
+                    let details = `<p class="text-xs text-emerald-800 dark:text-emerald-200 font-semibold">${data.message}</p>`;
+                    if (data.uid) {
+                        details += `<p class="text-[11px] text-emerald-700 dark:text-emerald-300 font-mono mt-1">UID: ${data.uid} | ID: ${data.identifier}${data.template_size ? ` | Taille: ${data.template_size} octets` : ''}</p>`;
+                    }
+                    statusDesc.innerHTML = details;
+                }
+
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> <span>{{ __('Enregistré avec succès') }}</span>';
+                }
 
                 // Mark enrolled in cache and refresh
                 selectedEnrollPerson.is_enrolled = true;
@@ -1649,18 +1674,28 @@
                 const found = source.find(p => p.id === selectedEnrollPerson.id);
                 if (found) found.is_enrolled = true;
 
-                selectEnrollPerson(selectedEnrollPerson);
-                renderEnrollPersons();
+                setTimeout(() => {
+                    selectEnrollPerson(selectedEnrollPerson);
+                    renderEnrollPersons();
+                }, 2000);
 
             } catch (err) {
-                if (statusBox) statusBox.className = 'rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/40 p-4 transition-all block';
+                if (statusBox) statusBox.className = 'rounded-xl border border-rose-300 dark:border-rose-700 bg-rose-50 dark:bg-rose-950/50 p-4 transition-all block shadow-sm';
                 if (spinner) {
-                    spinner.className = 'h-6 w-6 shrink-0 text-rose-600';
-                    spinner.innerHTML = '<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+                    spinner.className = 'h-7 w-7 shrink-0 text-rose-600 dark:text-rose-400';
+                    spinner.innerHTML = '<svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
                 }
-                if (statusTitle) statusTitle.textContent = "Statut de l'enregistrement";
-                if (statusDesc) statusDesc.textContent = err.message;
-                if (submitBtn) submitBtn.disabled = false;
+                if (statusTitle) statusTitle.textContent = "{{ __('Échec de l\'enrôlement biométrique') }}";
+                if (statusDesc) {
+                    statusDesc.innerHTML = `
+                        <p class="text-xs text-rose-800 dark:text-rose-200 font-medium">${err.message}</p>
+                        <p class="text-[11px] text-rose-600 dark:text-rose-400 mt-1">{{ __('Conseil : assurez-vous que le pointeur est allumé et posez le doigt 3 fois sur le capteur.') }}</p>
+                    `;
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> <span>{{ __('Réessayer l\'enregistrement') }}</span>';
+                }
             }
         }
 

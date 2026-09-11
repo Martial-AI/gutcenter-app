@@ -73,58 +73,164 @@ class ZKTecoService
         return false;
     }
 
-    public function enrollFingerprint(string $userId, int $fingerId = 0): array
+    public function getPythonBinary(): string
     {
-        if (! $this->socket && ! $this->connect()) {
+        $custom = \App\Models\Setting::get('zkteco_python_path')
+            ?: config('services.zkteco.python_path');
+
+        if ($custom && is_executable($custom)) {
+            return $custom;
+        }
+
+        $candidates = PHP_OS_FAMILY === 'Windows'
+            ? ['python', 'py -3', 'C:\\Python314\\python.exe', 'C:\\Python311\\python.exe', 'C:\\Python310\\python.exe']
+            : ['python3', 'python', '/usr/bin/python3', '/usr/local/bin/python3'];
+
+        foreach ($candidates as $bin) {
+            $check = @shell_exec($bin . ' --version 2>&1');
+            if ($check && str_contains(strtolower($check), 'python')) {
+                return $bin;
+            }
+        }
+
+        return PHP_OS_FAMILY === 'Windows' ? 'python' : 'python3';
+    }
+
+    public function enrollFingerprint(string $userId, string $name = '', int $fingerId = 0, int $timeout = 60): array
+    {
+        $cleanId = trim($userId);
+        $cleanName = trim($name ?: $cleanId);
+        $python = $this->getPythonBinary();
+        $scriptPath = base_path('scripts/zk_manage.py');
+
+        if (! file_exists($scriptPath)) {
             return [
                 'success' => false,
-                'message' => "Impossible de se connecter à la pointeuse ({$this->ip}:{$this->port}). Vérifiez que la pointeuse est allumée et connectée au réseau.",
+                'message' => "Script de pont ZKTeco introuvable à {$scriptPath}.",
             ];
         }
 
-        try {
-            // First send CMD_DISABLEDEVICE to avoid conflict during enrollment
-            $this->sendCommand(self::CMD_DISABLEDEVICE);
+        $command = sprintf(
+            '%s %s enroll --ip %s --port %d --user-id %s --name %s --finger-index %d --timeout %d',
+            $python,
+            escapeshellarg($scriptPath),
+            escapeshellarg($this->ip),
+            $this->port,
+            escapeshellarg($cleanId),
+            escapeshellarg($cleanName),
+            $fingerId,
+            $timeout
+        );
 
-            // Command CMD_STARTENROLL (61)
-            // Payload: user ID string null-padded + finger id byte (0 = thumb, etc.)
-            $cleanId = trim($userId);
-            $commandString = pack('a24C', $cleanId, $fingerId);
-            $buf = $this->createHeader(self::CMD_STARTENROLL, 0, $this->sessionId, $this->replyId, $commandString);
-            @fwrite($this->socket, $buf);
+        Log::info("ZKTeco executing enroll command: {$command}");
 
-            $response = @fread($this->socket, 1024);
-            $ackCode = 0;
-            if (strlen($response) >= 8) {
-                $u = unpack('vcode', substr($response, 0, 2));
-                $ackCode = $u['code'] ?? 0;
+        $descriptors = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+
+        $process = @proc_open($command, $descriptors, $pipes, base_path());
+
+        if (! is_resource($process)) {
+            return [
+                'success' => false,
+                'message' => "Impossible de lancer le processus d'enrôlement Python.",
+            ];
+        }
+
+        fclose($pipes[0]);
+
+        $maxWaitSeconds = $timeout + 15;
+        $startTime = time();
+        $stdout = '';
+        $stderr = '';
+
+        stream_set_blocking($pipes[1], false);
+        stream_set_blocking($pipes[2], false);
+
+        while (true) {
+            $r = [$pipes[1], $pipes[2]];
+            $w = null;
+            $e = null;
+            $num = @stream_select($r, $w, $e, 1);
+
+            if ($num > 0) {
+                foreach ($r as $pipe) {
+                    if ($pipe === $pipes[1]) {
+                        $stdout .= fread($pipe, 4096);
+                    } elseif ($pipe === $pipes[2]) {
+                        $stderr .= fread($pipe, 4096);
+                    }
+                }
             }
 
-            // Re-enable device
-            $this->sendCommand(self::CMD_ENABLEDEVICE);
+            $status = proc_get_status($process);
+            if (! $status['running']) {
+                $stdout .= stream_get_contents($pipes[1]);
+                $stderr .= stream_get_contents($pipes[2]);
+                break;
+            }
 
-            $isAccepted = ($ackCode === self::CMD_ACK_OK || strlen($response) >= 8);
+            if ((time() - $startTime) > $maxWaitSeconds) {
+                proc_terminate($process, 9);
+                fclose($pipes[1]);
+                fclose($pipes[2]);
+                proc_close($process);
+                return [
+                    'success' => false,
+                    'message' => "Délai d'enrôlement dépassé ({$timeout}s). Le doigt n'a pas été posé à temps sur le pointeur.",
+                ];
+            }
 
-            return [
-                'success' => $isAccepted,
-                'ack_code' => $ackCode,
-                'identifier' => $cleanId,
-                'message' => $isAccepted
-                    ? "Commande envoyée au pointeur ({$this->ip}). Posez le doigt de {$cleanId} 3 fois sur le capteur pour valider l'empreinte."
-                    : "Le pointeur a renvoyé un statut d'erreur (code {$ackCode}).",
-            ];
-        } catch (\Throwable $e) {
-            Log::error('ZKTeco enrollFingerprint failed: ' . $e->getMessage());
+            usleep(100000); // 100ms
+        }
+
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        proc_close($process);
+
+        $output = trim($stdout);
+        $result = json_decode($output, true);
+
+        if (! is_array($result)) {
+            Log::error("ZKTeco enroll raw output: {$output} | Stderr: {$stderr}");
             return [
                 'success' => false,
-                'message' => 'Erreur lors de l\'enrôlement : ' . $e->getMessage(),
+                'message' => "Réponse inattendue du script d'enrôlement : " . ($output ?: $stderr ?: 'Aucune sortie.'),
             ];
-        } finally {
-            $this->disconnect();
         }
+
+        return $result;
     }
 
     public function deleteUser(string $userId): array
+    {
+        $cleanId = trim($userId);
+        $python = $this->getPythonBinary();
+        $scriptPath = base_path('scripts/zk_manage.py');
+
+        if (file_exists($scriptPath)) {
+            $command = sprintf(
+                '%s %s delete --ip %s --port %d --user-id %s',
+                $python,
+                escapeshellarg($scriptPath),
+                escapeshellarg($this->ip),
+                $this->port,
+                escapeshellarg($cleanId)
+            );
+
+            $output = @shell_exec($command);
+            $result = json_decode(trim($output), true);
+            if (is_array($result)) {
+                return $result;
+            }
+        }
+
+        return $this->deleteUserSocket($userId);
+    }
+
+    public function deleteUserSocket(string $userId): array
     {
         if (! $this->socket && ! $this->connect()) {
             return [

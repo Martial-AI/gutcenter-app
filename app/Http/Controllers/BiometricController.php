@@ -105,20 +105,19 @@ class BiometricController extends Controller
             ], 422);
         }
 
-        // Check if already registered
-        $existing = FingerprintRegistration::where('identifier', $identifier)->first();
-        if ($existing) {
+
+        $zk = new ZKTecoService();
+        // Trigger hardware enrollment on ZKTeco terminal (blocks while waiting for 3 finger touches)
+        $deviceResult = $zk->enrollFingerprint($identifier, $name, $fingerIndex, 60);
+
+        if (! ($deviceResult['success'] ?? false)) {
             return response()->json([
                 'success' => false,
-                'is_already_enrolled' => true,
-                'message' => "L'identifiant {$identifier} ({$name}) est déjà enregistré dans le système biométrique.",
+                'message' => $deviceResult['message'] ?? "L'enrôlement a échoué. Assurez-vous que le pointeur est allumé et posez le doigt 3 fois sur le capteur.",
             ], 422);
         }
 
-        $zk = new ZKTecoService();
-        $deviceResult = $zk->enrollFingerprint($identifier, $fingerIndex);
-
-        // Record registration in DB
+        // Record registration in DB ONLY if successfully enrolled on the physical device
         $registration = FingerprintRegistration::updateOrCreate(
             ['identifier' => $identifier],
             [
@@ -137,8 +136,9 @@ class BiometricController extends Controller
             'identifier' => $identifier,
             'name' => $name,
             'device_ip' => $zk->getIp(),
-            'device_message' => $deviceResult['message'] ?? '',
-            'message' => "Empreinte biométrique associée avec succès à {$name} ({$identifier}). Le capteur a été activé pour l'enregistrement.",
+            'uid' => $deviceResult['uid'] ?? null,
+            'template_size' => $deviceResult['template_size'] ?? null,
+            'message' => "Empreinte biométrique validée et enregistrée avec succès sur le pointeur pour {$name} ({$identifier}).",
         ]);
     }
 
