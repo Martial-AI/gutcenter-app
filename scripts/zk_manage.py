@@ -1,498 +1,891 @@
 #!/usr/bin/env python3
-"""
-ZKTeco Terminal Manager Bridge for Laravel
-Uses ONLY Python stdlib (socket, struct, time) — NO external libraries required.
-Implements the ZKTeco binary protocol directly.
-Outputs JSON for clean consumption by Laravel PHP.
-"""
 
-import sys
-import json
-import socket
-import struct
-import time
 import argparse
+import json
+import sys
+import time
 
-# ---------------------------------------------------------------------------
-# ZKTeco Protocol Constants
-# ---------------------------------------------------------------------------
-CMD_CONNECT        = 1000
-CMD_EXIT           = 1001
-CMD_ENABLEDEVICE   = 1002
-CMD_DISABLEDEVICE  = 1003
-CMD_ACK_OK         = 2000
-CMD_ACK_ERROR      = 2001
-CMD_PREPARE_DATA   = 1500
-CMD_DATA           = 1501
-CMD_USER_WRQ       = 72    # Write user
-CMD_USER_RRQ       = 8     # Read users
-CMD_STARTENROLL    = 61    # Start fingerprint enrollment
-CMD_DELETE_USER    = 18    # Delete user
-CMD_ATTLOG_RRQ     = 500   # Read attendance log
-
-HEADER_SIZE = 8
+from zk import ZK
+from zk.finger import Finger
+from zk.exception import ZKError, ZKErrorResponse
 
 
-# ---------------------------------------------------------------------------
-# Low-level ZK packet helpers
-# ---------------------------------------------------------------------------
+# ============================================================
+# SORTIE
+# ============================================================
 
-def _checksum(data: bytes) -> int:
-    s = 0
-    n = len(data)
-    for i in range(0, n - 1, 2):
-        w = data[i] | (data[i + 1] << 8)
-        s += w
-    if n % 2:
-        s += data[-1]
-    while s >> 16:
-        s = (s & 0xFFFF) + (s >> 16)
-    return (~s) & 0xFFFF
+def output(data):
+    print(json.dumps(data, ensure_ascii=False))
 
 
-def _build_packet(command: int, session_id: int, reply_id: int, payload: bytes = b'') -> bytes:
-    header = struct.pack('<HHHH', command, 0, session_id, reply_id) + payload
-    chk = _checksum(header)
-    return struct.pack('<HHHH', command, chk, session_id, reply_id) + payload
+def progress(message):
+    print(f"ENROLL_PROGRESS: {message}", file=sys.stderr, flush=True)
 
 
-def _parse_header(data: bytes) -> dict:
-    if len(data) < HEADER_SIZE:
-        return {}
-    cmd, chk, sid, rid = struct.unpack('<HHHH', data[:HEADER_SIZE])
-    return {'command': cmd, 'checksum': chk, 'session_id': sid, 'reply_id': rid,
-            'payload': data[HEADER_SIZE:]}
+# ============================================================
+# CONNEXION
+# ============================================================
+
+def connect_device(args):
+    progress("Connexion au terminal...")
+
+    zk = ZK(
+        args.ip,
+        port=args.port,
+        timeout=args.timeout,
+        password=0,
+        force_udp=False,
+        ommit_ping=False
+    )
+
+    conn = zk.connect()
+
+    progress("Connexion réussie.")
+
+    return conn
 
 
-def _decode_zk_time(t: int) -> str:
+# ============================================================
+# UTILISATEURS
+# ============================================================
+
+def get_users(conn):
+    return conn.get_users()
+
+
+def find_user(conn, user_id):
+    users = get_users(conn)
+
+    for user in users:
+        if str(user.user_id) == str(user_id):
+            return user
+
+    return None
+
+
+def find_user_by_uid(conn, uid):
+    users = get_users(conn)
+
+    for user in users:
+        if int(user.uid) == int(uid):
+            return user
+
+    return None
+
+
+def find_free_uid(conn):
+    users = get_users(conn)
+    used = {int(u.uid) for u in users}
+
+    uid = 1
+
+    while uid in used:
+        uid += 1
+
+    return uid
+
+# ============================================================
+# UTILISATEURS - LECTURE
+# ============================================================
+
+def list_users(args):
+    conn = None
+
     try:
-        sec    = t % 60;    t //= 60
-        minute = t % 60;    t //= 60
-        hour   = t % 24;    t //= 24
-        day    = (t % 31) + 1; t //= 31
-        month  = (t % 12) + 1; t //= 12
-        year   = t + 2000
-        if 2010 <= year <= 2040:
-            return f"{year:04d}-{month:02d}-{day:02d} {hour:02d}:{minute:02d}:{sec:02d}"
-    except Exception:
-        pass
-    return time.strftime('%Y-%m-%d %H:%M:%S')
+        conn = connect_device(args)
+
+        users = get_users(conn)
+
+        data = []
+
+        for user in users:
+            data.append({
+                "uid": int(user.uid),
+                "user_id": str(user.user_id),
+                "name": str(user.name),
+                "privilege": int(user.privilege),
+                "card": int(user.card),
+            })
+
+        output({
+            "success": True,
+            "count": len(data),
+            "users": data
+        })
+
+        return 0
+
+    except Exception as e:
+        output({
+            "success": False,
+            "count": 0,
+            "users": [],
+            "message": f"Erreur lecture utilisateurs : {e}"
+        })
+
+        return 1
+
+    finally:
+        if conn:
+            try:
+                conn.enable_device()
+            except Exception:
+                pass
+
+            try:
+                conn.disconnect()
+            except Exception:
+                pass
+# ============================================================
+# TEMPLATES
+# ============================================================
+
+def get_template_map(conn):
+    templates = conn.get_templates()
+
+    result = {}
+
+    for template in templates:
+        result[(int(template.uid), int(template.fid))] = template
+
+    return result
 
 
-# ---------------------------------------------------------------------------
-# ZKDevice — manages a UDP or TCP session (auto-detected)
-# ---------------------------------------------------------------------------
+def get_templates_for_uid(conn, uid):
+    return [
+        t for t in conn.get_templates()
+        if int(t.uid) == int(uid)
+    ]
 
-class ZKDevice:
-    def __init__(self, ip: str, port: int = 4370, timeout: int = 10):
-        self.ip = ip
-        self.port = port
-        self.timeout = timeout
-        self.sock = None
-        self.use_tcp = False  # determined at connect time
-        self.session_id = 0
-        self.reply_id = 0
 
-    def _send(self, data: bytes):
-        if self.use_tcp:
-            self.sock.sendall(data)
+# ============================================================
+# TEST CONNEXION
+# ============================================================
+
+def test_connection(args):
+    conn = None
+
+    try:
+        conn = connect_device(args)
+
+        output({
+            "success": True,
+            "online": True,
+            "message": f"Terminal connecté : {args.ip}",
+            "diag": {
+                "ip": args.ip,
+                "port": args.port,
+                "device": "ZKTeco",
+                "transport": "TCP/pyzk"
+            }
+        })
+
+        return 0
+
+    except Exception as e:
+        output({
+            "success": False,
+            "online": False,
+            "message": str(e),
+            "diag": {
+                "ip": args.ip,
+                "port": args.port,
+                "device": "ZKTeco",
+                "transport": "TCP/pyzk"
+            }
+        })
+
+        return 1
+
+    finally:
+        if conn:
+            try:
+                conn.enable_device()
+            except Exception:
+                pass
+
+            try:
+                conn.disconnect()
+            except Exception:
+                pass
+
+
+# ============================================================
+# ENROLEMENT
+# ============================================================
+
+def enroll_user(args):
+    conn = None
+
+    target_uid = None
+    temporary_uid = None
+
+    try:
+        conn = connect_device(args)
+
+        # ----------------------------------------------------
+        # 1. Chercher l'utilisateur cible
+        # ----------------------------------------------------
+
+        user = find_user(conn, args.user_id)
+
+        if user:
+            target_uid = int(user.uid)
+
+            progress(
+                f"Utilisateur existant : "
+                f"UID={target_uid}, UserID={user.user_id}"
+            )
+
         else:
-            self.sock.sendto(data, (self.ip, self.port))
+            target_uid = find_free_uid(conn)
 
-    def _recv(self, size: int = 4096) -> bytes:
-        try:
-            if self.use_tcp:
-                data = self.sock.recv(size)
-            else:
-                data, _ = self.sock.recvfrom(size)
-            return data or b''
-        except (socket.timeout, OSError):
-            return b''
+            progress(
+                f"Création utilisateur : "
+                f"UID={target_uid}, UserID={args.user_id}"
+            )
 
-    def _try_connect_udp(self) -> bool:
-        """Try UDP connection (standard ZKTeco)."""
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.settimeout(self.timeout)
-            pkt = _build_packet(CMD_CONNECT, 0, 0)
-            s.sendto(pkt, (self.ip, self.port))
-            resp, _ = s.recvfrom(1024)
-            hdr = _parse_header(resp)
-            sys.stderr.write(f"[UDP] sent={pkt.hex()} recv={resp.hex()} cmd={hdr.get('command')} sid={hdr.get('session_id')}\n")
-            if hdr.get('command') == CMD_ACK_OK:
-                self.sock = s
-                self.use_tcp = False
-                self.session_id = hdr['session_id']
-                self.reply_id = 0
-                return True
-            s.close()
-        except Exception as e:
-            sys.stderr.write(f"[UDP] exception: {e}\n")
-            try:
-                s.close()
-            except Exception:
-                pass
-        return False
+            conn.set_user(
+                uid=target_uid,
+                name=args.name,
+                privilege=0,
+                password="",
+                group_id="",
+                user_id=args.user_id,
+                card=0
+            )
 
-    def _try_connect_tcp(self) -> bool:
-        """Try TCP connection (some ZKTeco firmware variants)."""
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(self.timeout)
-            s.connect((self.ip, self.port))
-            pkt = _build_packet(CMD_CONNECT, 0, 0)
-            s.sendall(pkt)
-            resp = s.recv(1024)
-            hdr = _parse_header(resp)
-            sys.stderr.write(f"[TCP] sent={pkt.hex()} recv={resp.hex()} cmd={hdr.get('command')} sid={hdr.get('session_id')}\n")
-            if hdr.get('command') == CMD_ACK_OK:
-                self.sock = s
-                self.use_tcp = True
-                self.session_id = hdr['session_id']
-                self.reply_id = 0
-                return True
-            s.close()
-        except Exception as e:
-            sys.stderr.write(f"[TCP] exception: {e}\n")
-            try:
-                s.close()
-            except Exception:
-                pass
-        return False
+            user = find_user_by_uid(conn, target_uid)
 
-    def connect(self) -> bool:
-        """Try UDP first (standard), then TCP as fallback."""
-        if self._try_connect_udp():
-            return True
-        if self._try_connect_tcp():
-            return True
-        return False
+            if not user:
+                raise ZKErrorResponse(
+                    f"Impossible de retrouver UID={target_uid}"
+                )
 
-    def disconnect(self):
-        if self.sock:
-            try:
-                pkt = _build_packet(CMD_EXIT, self.session_id, self.reply_id)
-                self._send(pkt)
-            except Exception:
-                pass
-            try:
-                self.sock.close()
-            except Exception:
-                pass
-            self.sock = None
+        # ----------------------------------------------------
+        # 2. Vérifier si le doigt existe déjà
+        # ----------------------------------------------------
 
-    def _cmd(self, command: int, payload: bytes = b'') -> dict:
-        self.reply_id += 1
-        pkt = _build_packet(command, self.session_id, self.reply_id, payload)
-        self._send(pkt)
-        resp = self._recv()
-        return _parse_header(resp)
+        existing_target_templates = get_templates_for_uid(
+            conn,
+            target_uid
+        )
 
-    def disable_device(self):
-        self._cmd(CMD_DISABLEDEVICE, b'\xff\xff\x00\x00')
+        for template in existing_target_templates:
+            if int(template.fid) == int(args.finger_index):
+                output({
+                    "success": False,
+                    "enrolled": False,
+                    "message": (
+                        f"Une empreinte existe déjà : "
+                        f"UID={target_uid}, "
+                        f"FID={args.finger_index}"
+                    )
+                })
+                return 1
 
-    def enable_device(self):
-        self._cmd(CMD_ENABLEDEVICE)
+        progress(
+            f"Préparation de l'enrôlement : "
+            f"UID={target_uid}, "
+            f"UserID={args.user_id}, "
+            f"FID={args.finger_index}"
+        )
 
-    def get_users(self) -> list:
-        hdr = self._cmd(CMD_USER_RRQ)
-        raw = hdr.get('payload', b'')
+        # ----------------------------------------------------
+        # 3. État AVANT enrôlement
+        # ----------------------------------------------------
 
-        if hdr.get('command') == CMD_PREPARE_DATA:
-            total_size = struct.unpack('<I', raw[:4])[0] if len(raw) >= 4 else 0
-            raw = b''
-            while len(raw) < total_size:
-                chunk = self._recv(65535)
-                if not chunk:
-                    break
-                raw += _parse_header(chunk).get('payload', b'')
-
-        users = []
-        record_size = 72
-        for i in range(0, len(raw) - record_size + 1, record_size):
-            rec = raw[i:i + record_size]
-            try:
-                uid = struct.unpack('<H', rec[0:2])[0]
-                user_id = rec[48:72].rstrip(b'\x00').decode('ascii', errors='ignore').strip()
-                name = rec[11:35].rstrip(b'\x00').decode('utf-8', errors='ignore').strip()
-                users.append({'uid': uid, 'user_id': user_id, 'name': name})
-            except Exception:
-                continue
-        return users
-
-    def set_user(self, uid: int, user_id: str, name: str, privilege: int = 0, password: str = '', card: int = 0):
-        uid_b     = struct.pack('<H', uid & 0xFFFF)
-        priv_b    = struct.pack('<B', privilege)
-        pw_b      = password.encode('ascii', errors='replace')[:8].ljust(8, b'\x00')
-        name_b    = name.encode('utf-8', errors='replace')[:24].ljust(24, b'\x00')
-        card_b    = struct.pack('<I', card)
-        group_b   = b'\x00' * 9
-        uid2_b    = struct.pack('<H', uid & 0xFFFF)
-        uid3_b    = b'\x00' * 4
-        user_id_b = user_id.encode('ascii', errors='replace')[:24].ljust(24, b'\x00')
-
-        payload = (uid_b + priv_b + pw_b + name_b + card_b + group_b + uid2_b + uid3_b + user_id_b)[:72].ljust(72, b'\x00')
-        hdr = self._cmd(CMD_USER_WRQ, payload)
-        return hdr.get('command') == CMD_ACK_OK
-
-    def delete_user(self, uid: int, user_id: str) -> bool:
-        payload = struct.pack('<H', uid & 0xFFFF)
-        hdr = self._cmd(CMD_DELETE_USER, payload)
-        return hdr.get('command') == CMD_ACK_OK
-
-    def enroll_fingerprint(self, uid: int, finger_index: int = 0, timeout: int = 60) -> bool:
-        """
-        Sends CMD_STARTENROLL and polls until ACK_OK (all 3 finger presses done) or timeout.
-        The device display will guide the user interactively.
-        """
-        payload = struct.pack('<HBB', uid & 0xFFFF, finger_index, 1)
-        self.reply_id += 1
-        pkt = _build_packet(CMD_STARTENROLL, self.session_id, self.reply_id, payload)
-        self._send(pkt)
-
-        deadline = time.time() + timeout
-        last_print = 0
-
-        while time.time() < deadline:
-            resp = self._recv(1024)
-            if resp:
-                hdr = _parse_header(resp)
-                cmd = hdr.get('command', 0)
-                if cmd == CMD_ACK_OK:
-                    return True
-                if cmd == CMD_ACK_ERROR:
-                    return False
-
-            now = time.time()
-            if now - last_print >= 5:
-                remaining = int(deadline - now)
-                print(f"ENROLL_PROGRESS: waiting for finger... {remaining}s remaining", flush=True)
-                last_print = now
-
-            time.sleep(0.5)
-
-        return False
-
-    def get_attendance(self) -> list:
-        hdr = self._cmd(CMD_ATTLOG_RRQ)
-        raw = hdr.get('payload', b'')
-
-        if hdr.get('command') == CMD_PREPARE_DATA:
-            total_size = struct.unpack('<I', raw[:4])[0] if len(raw) >= 4 else 0
-            raw = b''
-            while len(raw) < total_size:
-                chunk = self._recv(65535)
-                if not chunk:
-                    break
-                raw += _parse_header(chunk).get('payload', b'')
-
-        logs = []
-        record_size = 40
-        for i in range(0, len(raw) - record_size + 1, record_size):
-            rec = raw[i:i + record_size]
-            try:
-                user_id = rec[0:24].rstrip(b'\x00').decode('ascii', errors='ignore').strip()
-                t = struct.unpack('<I', rec[24:28])[0]
-                ts = _decode_zk_time(t)
-                punch = rec[28] if len(rec) > 28 else 0
-                if user_id:
-                    logs.append({'identifier': user_id, 'timestamp': ts, 'status': 'present', 'punch': punch})
-            except Exception:
-                continue
-        return logs
-
-
-# ---------------------------------------------------------------------------
-# High-level command functions (use ZKDevice — no external libs)
-# ---------------------------------------------------------------------------
-
-def test_connection(args) -> dict:
-    ip, port = args.ip, args.port
-    diag = {}
-
-    # 1. Check TCP reachability first (port open?)
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.settimeout(5)
-        result = s.connect_ex((ip, port))
-        s.close()
-        diag['tcp_port_open'] = (result == 0)
-    except Exception as e:
-        diag['tcp_port_open'] = False
-        diag['tcp_error'] = str(e)
-
-    # 2. Try ZKTeco protocol connection (UDP then TCP)
-    zk = ZKDevice(ip, port, timeout=8)
-    try:
-        if zk.connect():
-            transport = 'TCP' if zk.use_tcp else 'UDP'
-            zk.disconnect()
-            return {
-                'success': True, 'online': True,
-                'transport': transport,
-                'message': f'Connecté avec succès à {ip}:{port} via {transport}',
-                'diag': diag,
-            }
-    except Exception as e:
-        diag['zk_error'] = str(e)
-
-    msg = f'Terminal injoignable ({ip}:{port})'
-    if not diag.get('tcp_port_open'):
-        msg += ' — port TCP fermé ou hôte inaccessible depuis ce serveur.'
-    else:
-        msg += ' — port ouvert mais protocole ZKTeco non reconnu (essayez --port 4370).'
-
-    return {'success': False, 'online': False, 'message': msg, 'diag': diag}
-
-
-def enroll_user(args) -> dict:
-    user_id      = str(args.user_id).strip()
-    user_name    = str(args.name or user_id).strip()
-    finger_index = int(args.finger_index or 0)
-    timeout      = int(args.timeout or 60)
-
-    zk = ZKDevice(args.ip, args.port, timeout=max(15, timeout))
-    try:
-        if not zk.connect():
-            return {'success': False, 'enrolled': False, 'user_id': user_id,
-                    'message': f'Impossible de se connecter au terminal ({args.ip}:{args.port})'}
-
-        zk.disable_device()
-
-        uid = int(args.uid or 0)
-        if uid <= 0:
-            users = zk.get_users()
-            existing = next((u for u in users if u['user_id'] == user_id), None)
-            if existing:
-                uid = existing['uid']
-            else:
-                uids = [u['uid'] for u in users if isinstance(u['uid'], int) and u['uid'] > 0]
-                uid = (max(uids) + 1) if uids else 1
-
-        zk.set_user(uid=uid, user_id=user_id, name=user_name[:24], privilege=0)
-
-        print(f"ENROLL_START: uid={uid} user_id={user_id} finger={finger_index}", flush=True)
-
-        success = zk.enroll_fingerprint(uid=uid, finger_index=finger_index, timeout=timeout)
-
-        zk.enable_device()
-
-        if success:
-            return {
-                'success': True, 'enrolled': True,
-                'uid': uid, 'user_id': user_id, 'finger_index': finger_index,
-                'message': f'Empreinte enregistrée avec succès pour {user_name} ({user_id}).'
-            }
-        return {
-            'success': False, 'enrolled': False, 'uid': uid, 'user_id': user_id,
-            'message': "Délai dépassé ou erreur hardware — le doigt n'a pas été posé à temps."
+        users_before = get_users(conn)
+        user_uids_before = {
+            int(u.uid) for u in users_before
         }
 
-    except Exception as e:
-        return {'success': False, 'enrolled': False, 'user_id': user_id,
-                'message': f"Erreur lors de l'enrôlement : {str(e)}"}
-    finally:
+        templates_before = get_template_map(conn)
+        template_keys_before = set(templates_before.keys())
+
+        # ----------------------------------------------------
+        # 4. Désactiver le terminal
+        # ----------------------------------------------------
+
+        conn.disable_device()
+
+        progress("Terminal désactivé pendant l'enrôlement.")
+        progress(
+            "Placez le doigt sur le capteur "
+            "(plusieurs captures seront demandées)."
+        )
+
+        # ----------------------------------------------------
+        # 5. Lancer l'enrôlement
+        #
+        # IMPORTANT :
+        # Sur ce ZK3969, enroll_user() peut expirer alors
+        # que le terminal a quand même créé le template.
+        # ----------------------------------------------------
+
+        enroll_exception = None
+        enroll_result = None
+
         try:
-            zk.enable_device()
+            enroll_result = conn.enroll_user(
+                uid=target_uid,
+                temp_id=args.finger_index,
+                user_id=args.user_id
+            )
+
+        except (TimeoutError, ZKError, ZKErrorResponse) as e:
+            enroll_exception = e
+
+        # ----------------------------------------------------
+        # 6. Réactiver le terminal avant inspection
+        # ----------------------------------------------------
+
+        try:
+            conn.enable_device()
         except Exception:
             pass
-        zk.disconnect()
 
+        progress("Terminal réactivé.")
 
-def delete_user(args) -> dict:
-    user_id = str(args.user_id).strip()
-    zk = ZKDevice(args.ip, args.port, timeout=10)
-    try:
-        if not zk.connect():
-            return {'success': False, 'user_id': user_id,
-                    'message': 'Impossible de se connecter au terminal.'}
+        # Petit délai pour laisser le terminal finaliser
+        time.sleep(1)
 
-        zk.disable_device()
-        users = zk.get_users()
-        found = [u for u in users if u['user_id'] == user_id]
+        # ----------------------------------------------------
+        # 7. Chercher le template réellement créé
+        # ----------------------------------------------------
 
-        deleted = 0
-        for u in found:
-            if zk.delete_user(u['uid'], user_id):
-                deleted += 1
+        templates_after = get_template_map(conn)
 
-        zk.enable_device()
+        new_templates = []
 
-        return {
-            'success': True, 'user_id': user_id, 'deleted': True,
-            'message': f'Utilisateur {user_id} supprimé du terminal.' if deleted > 0
-                       else f'Utilisateur {user_id} introuvable sur le terminal (déjà supprimé?).'
-        }
+        for key, template in templates_after.items():
+            if key not in template_keys_before:
+                new_templates.append(template)
+
+        # ----------------------------------------------------
+        # 8. Cas idéal : le template est déjà sur UID cible
+        # ----------------------------------------------------
+
+        target_template = None
+
+        for template in new_templates:
+            if (
+                int(template.uid) == target_uid
+                and int(template.fid) == int(args.finger_index)
+                and int(template.valid) == 1
+            ):
+                target_template = template
+                break
+
+        if target_template is None:
+            # Vérification globale au cas où le template était
+            # déjà apparu mais n'était pas dans la liste "new".
+            for template in templates_after.values():
+                if (
+                    int(template.uid) == target_uid
+                    and int(template.fid) == int(args.finger_index)
+                    and int(template.valid) == 1
+                ):
+                    target_template = template
+                    break
+
+        # ----------------------------------------------------
+        # 9. Si le firmware a créé un UID temporaire
+        # ----------------------------------------------------
+
+        if target_template is None:
+
+            temporary_candidates = []
+
+            for template in new_templates:
+
+                uid = int(template.uid)
+                fid = int(template.fid)
+
+                if (
+                    uid != target_uid
+                    and fid == int(args.finger_index)
+                    and int(template.valid) == 1
+                ):
+                    temporary_candidates.append(template)
+
+            # Priorité à un UID qui n'existait pas avant.
+            temporary_candidates = [
+                t for t in temporary_candidates
+                if int(t.uid) not in user_uids_before
+            ]
+
+            if len(temporary_candidates) == 1:
+
+                temporary_template = temporary_candidates[0]
+                temporary_uid = int(temporary_template.uid)
+
+                progress(
+                    f"Template temporaire détecté : "
+                    f"UID={temporary_uid}, "
+                    f"FID={temporary_template.fid}, "
+                    f"Taille={len(temporary_template.template)}"
+                )
+
+                # --------------------------------------------
+                # Construire le Finger avec l'UID cible
+                # --------------------------------------------
+
+                finger_target = Finger(
+                    uid=target_uid,
+                    fid=int(temporary_template.fid),
+                    valid=int(temporary_template.valid),
+                    template=temporary_template.template
+                )
+
+                # --------------------------------------------
+                # Transfert vers l'utilisateur cible
+                # --------------------------------------------
+
+                progress(
+                    f"Transfert du template "
+                    f"UID={temporary_uid} → UID={target_uid}"
+                )
+
+                conn.save_user_template(
+                    user,
+                    [finger_target]
+                )
+
+                progress("Template transféré avec succès.")
+
+                # --------------------------------------------
+                # Vérification
+                # --------------------------------------------
+
+                templates_verify = get_template_map(conn)
+
+                verified = None
+
+                for template in templates_verify.values():
+                    if (
+                        int(template.uid) == target_uid
+                        and int(template.fid) == int(args.finger_index)
+                        and int(template.valid) == 1
+                    ):
+                        verified = template
+                        break
+
+                if verified is None:
+                    raise ZKErrorResponse(
+                        "Le template n'a pas pu être vérifié "
+                        f"sur UID={target_uid}"
+                    )
+
+                progress(
+                    f"Vérification OK : "
+                    f"UID={target_uid}, "
+                    f"FID={verified.fid}, "
+                    f"Taille={len(verified.template)}"
+                )
+
+                # --------------------------------------------
+                # Supprimer l'utilisateur temporaire
+                # --------------------------------------------
+
+                if temporary_uid != target_uid:
+
+                    progress(
+                        f"Suppression de l'utilisateur temporaire "
+                        f"UID={temporary_uid}"
+                    )
+
+                    try:
+                        conn.delete_user(uid=temporary_uid)
+                    except Exception as e:
+                        progress(
+                            f"Avertissement suppression UID temporaire : {e}"
+                        )
+
+                    # Vérification suppression
+                    remaining_user = find_user_by_uid(
+                        conn,
+                        temporary_uid
+                    )
+
+                    if remaining_user:
+                        progress(
+                            f"Avertissement : UID={temporary_uid} "
+                            f"existe encore."
+                        )
+                    else:
+                        progress(
+                            f"UID temporaire {temporary_uid} supprimé."
+                        )
+
+                output({
+                    "success": True,
+                    "enrolled": True,
+                    "uid": target_uid,
+                    "user_id": str(args.user_id),
+                    "name": str(user.name),
+                    "finger_index": int(args.finger_index),
+                    "template_size": len(verified.template),
+                    "temporary_uid": temporary_uid,
+                    "message": (
+                        "Empreinte enregistrée avec succès."
+                    )
+                })
+
+                return 0
+
+            # ------------------------------------------------
+            # Aucun template temporaire détecté
+            # ------------------------------------------------
+
+            message = (
+                "L'enrôlement n'a produit aucun template identifiable."
+            )
+
+            if enroll_exception:
+                message += f" Erreur du terminal : {enroll_exception}"
+
+            output({
+                "success": False,
+                "enrolled": False,
+                "uid": target_uid,
+                "message": message
+            })
+
+            return 1
+
+        # ----------------------------------------------------
+        # 10. Template déjà sur UID cible
+        # ----------------------------------------------------
+
+        output({
+            "success": True,
+            "enrolled": True,
+            "uid": target_uid,
+            "user_id": str(args.user_id),
+            "name": str(user.name),
+            "finger_index": int(args.finger_index),
+            "template_size": len(target_template.template),
+            "temporary_uid": None,
+            "message": "Empreinte enregistrée avec succès."
+        })
+
+        return 0
+
+    except KeyboardInterrupt:
+
+        output({
+            "success": False,
+            "enrolled": False,
+            "message": "Opération interrompue."
+        })
+
+        return 130
+
     except Exception as e:
-        return {'success': False, 'user_id': user_id, 'message': f'Erreur suppression : {str(e)}'}
+
+        output({
+            "success": False,
+            "enrolled": False,
+            "message": f"Erreur : {e}"
+        })
+
+        return 1
+
     finally:
-        try:
-            zk.enable_device()
-        except Exception:
-            pass
-        zk.disconnect()
+
+        if conn:
+
+            try:
+                conn.enable_device()
+            except Exception:
+                pass
+
+            try:
+                conn.disconnect()
+            except Exception:
+                pass
 
 
-def get_attendance(args) -> dict:
-    zk = ZKDevice(args.ip, args.port, timeout=15)
+# ============================================================
+# SUPPRESSION UTILISATEUR
+# ============================================================
+
+def delete_user(args):
+    conn = None
+
     try:
-        if not zk.connect():
-            return {'success': False, 'total': 0, 'logs': [],
-                    'message': 'Impossible de se connecter au terminal.'}
-        logs = zk.get_attendance()
-        return {'success': True, 'total': len(logs), 'logs': logs}
+        conn = connect_device(args)
+
+        user = find_user(conn, args.user_id)
+
+        if not user:
+            output({
+                "success": True,
+                "deleted": False,
+                "message": (
+                    f"Utilisateur {args.user_id} introuvable."
+                )
+            })
+            return 0
+
+        uid = int(user.uid)
+
+        progress(
+            f"Suppression utilisateur : "
+            f"UID={uid}, UserID={args.user_id}"
+        )
+
+        conn.delete_user(uid=uid)
+
+        time.sleep(0.5)
+
+        remaining = find_user_by_uid(conn, uid)
+
+        if remaining:
+
+            output({
+                "success": False,
+                "deleted": False,
+                "uid": uid,
+                "message": (
+                    f"L'utilisateur UID={uid} existe encore "
+                    "après suppression."
+                )
+            })
+
+            return 1
+
+        output({
+            "success": True,
+            "deleted": True,
+            "uid": uid,
+            "user_id": str(args.user_id),
+            "message": "Utilisateur supprimé avec succès."
+        })
+
+        return 0
+
     except Exception as e:
-        return {'success': False, 'total': 0, 'logs': [],
-                'message': f'Erreur récupération pointages : {str(e)}'}
+
+        output({
+            "success": False,
+            "deleted": False,
+            "message": f"Erreur : {e}"
+        })
+
+        return 1
+
     finally:
-        zk.disconnect()
+
+        if conn:
+
+            try:
+                conn.enable_device()
+            except Exception:
+                pass
+
+            try:
+                conn.disconnect()
+            except Exception:
+                pass
 
 
-# ---------------------------------------------------------------------------
-# CLI entry point
-# ---------------------------------------------------------------------------
+# ============================================================
+# ATTENDANCE
+# ============================================================
+
+def attendance(args):
+    conn = None
+
+    try:
+        conn = connect_device(args)
+
+        records = conn.get_attendance()
+
+        data = []
+
+        for record in records:
+
+            data.append({
+                "user_id": str(record.user_id),
+                "timestamp": (
+                    record.timestamp.isoformat()
+                    if record.timestamp
+                    else None
+                ),
+                "status": int(record.status),
+                "punch": int(record.punch)
+            })
+
+        output({
+            "success": True,
+            "count": len(data),
+            "attendance": data
+        })
+
+        return 0
+
+    except Exception as e:
+
+        output({
+            "success": False,
+            "message": f"Erreur : {e}"
+        })
+
+        return 1
+
+    finally:
+
+        if conn:
+
+            try:
+                conn.enable_device()
+            except Exception:
+                pass
+
+            try:
+                conn.disconnect()
+            except Exception:
+                pass
+
+
+# ============================================================
+# ARGUMENTS
+# ============================================================
+
+def build_parser():
+
+    parser = argparse.ArgumentParser(
+        description="Gestion ZKTeco via pyzk"
+    )
+
+    parser.add_argument(
+        "--ip",
+        default="192.168.0.201"
+    )
+
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=4370
+    )
+
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=20
+    )
+
+    subparsers = parser.add_subparsers(
+        dest="command",
+        required=True
+    )
+
+    # --------------------------------------------------------
+    # TEST
+    # --------------------------------------------------------
+
+    p_test = subparsers.add_parser("test")
+
+    p_test.add_argument("--ip", default=argparse.SUPPRESS)
+    p_test.add_argument("--port", type=int, default=argparse.SUPPRESS)
+    p_test.add_argument("--timeout", type=int, default=argparse.SUPPRESS)
+
+    # --------------------------------------------------------
+    # ENROLL
+    # --------------------------------------------------------
+
+    p_enroll = subparsers.add_parser("enroll")
+
+    # Permet aussi :
+    # enroll --ip ... --port ...
+    # afin de rester compatible avec Laravel.
+    p_enroll.add_argument("--ip", default=argparse.SUPPRESS)
+    p_enroll.add_argument("--port", type=int, default=argparse.SUPPRESS)
+    p_enroll.add_argument("--timeout", type=int, default=argparse.SUPPRESS)
+
+    p_enroll.add_argument(
+        "--user-id",
+        required=True
+    )
+
+    p_enroll.add_argument(
+        "--name",
+        required=True
+    )
+
+    p_enroll.add_argument(
+        "--finger-index",
+        type=int,
+        default=0
+    )
+
+    # --------------------------------------------------------
+    # DELETE
+    # --------------------------------------------------------
+
+    p_delete = subparsers.add_parser("delete")
+
+    p_delete.add_argument("--ip", default=argparse.SUPPRESS)
+    p_delete.add_argument("--port", type=int, default=argparse.SUPPRESS)
+    p_delete.add_argument("--timeout", type=int, default=argparse.SUPPRESS)
+
+    p_delete.add_argument(
+        "--user-id",
+        required=True
+    )
+
+    # --------------------------------------------------------
+    # USERS
+    # --------------------------------------------------------
+
+    p_users = subparsers.add_parser("users")
+
+    p_users.add_argument("--ip", default=argparse.SUPPRESS)
+    p_users.add_argument("--port", type=int, default=argparse.SUPPRESS)
+    p_users.add_argument("--timeout", type=int, default=argparse.SUPPRESS)
+
+    # --------------------------------------------------------
+    # ATTENDANCE
+    # --------------------------------------------------------
+
+    p_attendance = subparsers.add_parser("attendance")
+
+    p_attendance.add_argument("--ip", default=argparse.SUPPRESS)
+    p_attendance.add_argument("--port", type=int, default=argparse.SUPPRESS)
+    p_attendance.add_argument("--timeout", type=int, default=argparse.SUPPRESS)
+
+    return parser
+
+
+# ============================================================
+# MAIN
+# ============================================================
 
 def main():
-    parser = argparse.ArgumentParser(description="ZKTeco Bridge CLI (no external deps)")
-    sub = parser.add_subparsers(dest='command')
 
-    p = sub.add_parser('test')
-    p.add_argument('--ip', required=True)
-    p.add_argument('--port', type=int, default=4370)
+    parser = build_parser()
+    args = parser.parse_args()
 
-    p = sub.add_parser('enroll')
-    p.add_argument('--ip', required=True)
-    p.add_argument('--port', type=int, default=4370)
-    p.add_argument('--user-id', required=True)
-    p.add_argument('--name', default='')
-    p.add_argument('--uid', type=int, default=0)
-    p.add_argument('--finger-index', type=int, default=0)
-    p.add_argument('--timeout', type=int, default=60)
+    if args.command == "test":
+        return test_connection(args)
 
-    p = sub.add_parser('delete')
-    p.add_argument('--ip', required=True)
-    p.add_argument('--port', type=int, default=4370)
-    p.add_argument('--user-id', required=True)
+    if args.command == "enroll":
+        return enroll_user(args)
 
-    p = sub.add_parser('attendance')
-    p.add_argument('--ip', required=True)
-    p.add_argument('--port', type=int, default=4370)
+    if args.command == "delete":
+        return delete_user(args)
 
-    parsed = parser.parse_args()
+    if args.command == "users":
+        return list_users(args)
 
-    dispatch = {
-        'test':       test_connection,
-        'enroll':     enroll_user,
-        'delete':     delete_user,
-        'attendance': get_attendance,
-    }
+    if args.command == "attendance":
+        return attendance(args)
 
-    fn = dispatch.get(parsed.command)
-    result = fn(parsed) if fn else {'success': False, 'message': 'Commande inconnue'}
-
-    # JSON result is always the LAST line (progress lines are prefixed with ENROLL_PROGRESS:)
-    print(json.dumps(result, ensure_ascii=False))
+    parser.print_help()
+    return 1
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    sys.exit(main())

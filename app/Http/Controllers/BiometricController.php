@@ -125,6 +125,7 @@ class BiometricController extends Controller
                 'entity_id' => $entityId,
                 'name' => $name,
                 'finger_index' => $fingerIndex,
+                'device_uid' => $deviceResult['uid'] ?? null,
                 'device_ip' => $zk->getIp(),
                 'enrolled_by' => auth()->id(),
                 'enrolled_at' => now(),
@@ -143,33 +144,70 @@ class BiometricController extends Controller
     }
 
     /**
-     * Delete an enrolled fingerprint.
+ * Delete an enrolled fingerprint.
+ */
+public function destroy(Request $request): JsonResponse
+{
+    abort_unless(
+        auth()->user()?->can('attendance.manage')
+        || auth()->user()?->can('roles.manage'),
+        403
+    );
+
+    $identifier = trim((string) $request->input('identifier'));
+
+    if (blank($identifier)) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Identifiant requis.',
+        ], 422);
+    }
+
+    $reg = FingerprintRegistration::where('identifier', $identifier)->first();
+
+    // Suppression sur le terminal ZKTeco
+    $zk = new ZKTecoService();
+
+    $deviceResult = $zk->deleteUser($identifier);
+
+    /*
+     * IMPORTANT :
+     * On ne supprime l'enregistrement Laravel que si le terminal
+     * confirme la suppression ou indique que l'utilisateur était
+     * déjà absent.
      */
-    public function destroy(Request $request): JsonResponse
-    {
-        abort_unless(auth()->user()?->can('attendance.manage') || auth()->user()?->can('roles.manage'), 403);
-
-        $identifier = $request->input('identifier');
-        if (blank($identifier)) {
-            return response()->json(['success' => false, 'message' => 'Identifiant requis.'], 422);
-        }
-
-        $reg = FingerprintRegistration::where('identifier', $identifier)->first();
-
-        // Attempt device deletion
-        $zk = new ZKTecoService();
-        $deviceResult = $zk->deleteUser($identifier);
-
-        if ($reg) {
-            $reg->delete();
-        }
+    if (!($deviceResult['success'] ?? false)) {
+        Log::error('Échec suppression utilisateur ZKTeco', [
+            'identifier' => $identifier,
+            'device_result' => $deviceResult,
+        ]);
 
         return response()->json([
-            'success' => true,
-            'message' => "L'empreinte pour l'identifiant {$identifier} a été retirée du système et du pointeur.",
-            'device_message' => $deviceResult['message'] ?? null,
-        ]);
+            'success' => false,
+            'message' => $deviceResult['message']
+                ?? "Impossible de supprimer l'empreinte du pointeur ZKTeco.",
+            'device_result' => $deviceResult,
+        ], 422);
     }
+
+    /*
+     * Le terminal confirme :
+     * - deleted=true  : utilisateur supprimé
+     * - deleted=false : utilisateur déjà absent
+     *
+     * Dans les deux cas, la base Laravel peut être nettoyée.
+     */
+    if ($reg) {
+        $reg->delete();
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => "L'empreinte pour l'identifiant {$identifier} a été retirée du système.",
+        'device_deleted' => $deviceResult['deleted'] ?? false,
+        'device_message' => $deviceResult['message'] ?? null,
+    ]);
+}
 
     /**
      * Fetch all pointages grouped by date and sorted by exact timestamp descending.

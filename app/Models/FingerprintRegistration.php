@@ -13,6 +13,7 @@ class FingerprintRegistration extends Model
         'identifier',
         'name',
         'finger_index',
+        'device_uid',
         'device_ip',
         'enrolled_by',
         'enrolled_at',
@@ -22,6 +23,7 @@ class FingerprintRegistration extends Model
     {
         return [
             'finger_index' => 'integer',
+            'device_uid' => 'integer',
             'enrolled_at' => 'datetime',
         ];
     }

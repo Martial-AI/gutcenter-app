@@ -35,10 +35,20 @@ return [
         ],
     ],
 
-    'zkteco' => [
-        'ip' => env('ZKTECO_IP', '192.168.0.201'),
-        'port' => (int) env('ZKTECO_PORT', 4370),
-        'timeout' => (int) env('ZKTECO_TIMEOUT', 5),
-    ],
+   'zkteco' => [
+    'ip' => env('ZKTECO_IP', '192.168.0.201'),
+    'port' => (int) env('ZKTECO_PORT', 4370),
+    'timeout' => (int) env('ZKTECO_TIMEOUT', 20),
+
+    'python_path' => env(
+        'ZKTECO_PYTHON_PATH',
+        '/home/gutcenter/zkteco/.venv/bin/python3'
+    ),
+
+    'script_path' => env(
+        'ZKTECO_SCRIPT_PATH',
+        base_path('scripts/zk_manage.py')
+    ),
+	],
 
 ];
