@@ -398,7 +398,7 @@
 
             <div class="signature-block">
               <div class="role">Directeur Général</div>
-              <div class="name">Gautier BETIANA</div>
+              <div class="name">BETIANA Jean Gautier Berto</div>
             </div>
           </div>
         </div>

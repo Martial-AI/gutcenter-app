@@ -69,7 +69,7 @@
             <div class="field"><div class="label">Adresse</div><div class="value">{{ $student->address ?: '—' }}</div></div>
             <div class="field"><div class="label">Fonction</div><div class="value">Étudiant</div></div>
             <div class="field"><div class="label">Téléphone tuteur</div><div class="value">{{ $student->guardians->first()?->phone ?: '—' }}</div></div>
-            <div class="signature"><div class="role">Directeur Général</div><div class="name">Gautier BETIANA</div></div>
+            <div class="signature"><div class="role">Directeur Général</div><div class="name">BETIANA Jean Gautier Berto</div></div>
         </div>
     </div>
 

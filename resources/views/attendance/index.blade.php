@@ -1008,6 +1008,46 @@
     </div>
 
     <!-- ========================================================================= -->
+    <!-- MODAL 2b: Confirmation suppression empreinte (avec mot de passe)          -->
+    <!-- ========================================================================= -->
+    <div id="delete-fingerprint-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4 transition-all">
+        <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <!-- Header -->
+            <div class="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-rose-700 via-rose-800 to-rose-900 text-white">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                    <svg class="h-5 w-5 text-rose-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004.07 9.294M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-white">{{ __("Supprimer l'empreinte") }}</h3>
+                    <p class="text-xs text-rose-200" id="delete-fp-subtitle">Confirmation requise</p>
+                </div>
+            </div>
+            <!-- Body -->
+            <div class="p-6 space-y-4">
+                <div class="flex items-start gap-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 p-4">
+                    <svg class="h-5 w-5 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                    <p class="text-xs text-rose-800 dark:text-rose-200" id="delete-fp-msg">Vous êtes sur le point de supprimer l'empreinte biométrique de cette personne. Cette action est irréversible.</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">{{ __("Confirmez avec votre mot de passe") }}</label>
+                    <input type="password" id="delete-fp-password" autocomplete="current-password" placeholder="••••••••" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 outline-none transition">
+                    <div id="delete-fp-error" class="hidden mt-2 text-xs text-rose-600 dark:text-rose-400 font-medium"></div>
+                </div>
+            </div>
+            <!-- Footer -->
+            <div class="border-t border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-end gap-3">
+                <button type="button" onclick="closeDeleteFingerprintModal()" class="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition">
+                    {{ __("Annuler") }}
+                </button>
+                <button type="button" id="delete-fp-confirm-btn" onclick="confirmDeleteFingerprint()" class="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-rose-700 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    {{ __("Supprimer l'empreinte") }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
     <!-- MODAL 3: ZKTeco Device Settings / Connection                              -->
     <!-- ========================================================================= -->
     <div id="device-settings-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-3 sm:p-4">
@@ -1699,32 +1739,90 @@
             }
         }
 
-        async function deleteSelectedFingerprint() {
+        function deleteSelectedFingerprint() {
             if (!selectedEnrollPerson) return;
-            if (!confirm(`Confirmez-vous la suppression de l'empreinte pour ${selectedEnrollPerson.name} (${selectedEnrollPerson.identifier}) ?`)) {
+            openDeleteFingerprintModal();
+        }
+
+        function openDeleteFingerprintModal() {
+            const modal = document.getElementById('delete-fingerprint-modal');
+            const subtitle = document.getElementById('delete-fp-subtitle');
+            const msg = document.getElementById('delete-fp-msg');
+            const pwdInput = document.getElementById('delete-fp-password');
+            const errDiv = document.getElementById('delete-fp-error');
+            if (subtitle && selectedEnrollPerson) {
+                subtitle.textContent = `${selectedEnrollPerson.name} (${selectedEnrollPerson.identifier})`;
+            }
+            if (msg && selectedEnrollPerson) {
+                msg.textContent = `Vous êtes sur le point de supprimer l'empreinte biométrique de ${selectedEnrollPerson.name} (${selectedEnrollPerson.identifier}). Cette action est irréversible.`;
+            }
+            if (pwdInput) pwdInput.value = '';
+            if (errDiv) { errDiv.textContent = ''; errDiv.classList.add('hidden'); }
+            if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+            setTimeout(() => { if (pwdInput) pwdInput.focus(); }, 100);
+
+            // Close on backdrop click
+            modal?.addEventListener('click', function handler(e) {
+                if (e.target === modal) { closeDeleteFingerprintModal(); modal.removeEventListener('click', handler); }
+            });
+            // Close on Escape
+            document.addEventListener('keydown', function escHandler(e) {
+                if (e.key === 'Escape') { closeDeleteFingerprintModal(); document.removeEventListener('keydown', escHandler); }
+            });
+        }
+
+        function closeDeleteFingerprintModal() {
+            const modal = document.getElementById('delete-fingerprint-modal');
+            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        }
+
+        async function confirmDeleteFingerprint() {
+            const pwdInput = document.getElementById('delete-fp-password');
+            const errDiv = document.getElementById('delete-fp-error');
+            const confirmBtn = document.getElementById('delete-fp-confirm-btn');
+            const deleteBtn = document.getElementById('enroll-delete-btn');
+            const password = pwdInput?.value?.trim() || '';
+
+            if (!password) {
+                if (errDiv) { errDiv.textContent = 'Veuillez saisir votre mot de passe.'; errDiv.classList.remove('hidden'); }
+                pwdInput?.focus();
                 return;
             }
 
-            const deleteBtn = document.getElementById('enroll-delete-btn');
-            if (deleteBtn) deleteBtn.disabled = true;
+            if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.innerHTML = '<svg class="h-3.5 w-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Suppression...'; }
+            if (errDiv) { errDiv.textContent = ''; errDiv.classList.add('hidden'); }
 
             try {
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                // Verify password first
+                const verifyResp = await fetch('{{ route("password.confirm") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
+                    body: JSON.stringify({ password })
+                });
+                if (!verifyResp.ok) {
+                    const vData = await verifyResp.json().catch(() => ({}));
+                    throw new Error(vData.errors?.password?.[0] || vData.message || 'Mot de passe incorrect.');
+                }
+
+                // Password ok, proceed with deletion
                 const response = await fetch('/biometric/user', {
                     method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
                     body: JSON.stringify({ identifier: selectedEnrollPerson.identifier })
                 });
 
                 const data = await response.json();
                 if (!response.ok || !data.success) throw new Error(data.message || 'Erreur');
 
-                alert(data.message);
+                closeDeleteFingerprintModal();
+
+                // Show success notification
+                const notif = document.createElement('div');
+                notif.className = 'fixed bottom-6 right-6 z-[100] flex items-center gap-3 rounded-2xl bg-emerald-700 text-white px-5 py-3.5 shadow-2xl text-sm font-semibold animate-in fade-in slide-in-from-bottom-4 duration-300';
+                notif.innerHTML = `<svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>${data.message || 'Empreinte supprimée avec succès.'}`;
+                document.body.appendChild(notif);
+                setTimeout(() => { notif.style.opacity = '0'; notif.style.transition = 'opacity 0.4s'; setTimeout(() => notif.remove(), 400); }, 3500);
 
                 // Update cache
                 selectedEnrollPerson.is_enrolled = false;
@@ -1735,8 +1833,9 @@
                 selectEnrollPerson(selectedEnrollPerson);
                 renderEnrollPersons();
             } catch (err) {
-                alert("Erreur de suppression : " + err.message);
+                if (errDiv) { errDiv.textContent = err.message; errDiv.classList.remove('hidden'); }
             } finally {
+                if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.innerHTML = '<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> {{ __("Supprimer l\'empreinte") }}'; }
                 if (deleteBtn) deleteBtn.disabled = false;
             }
         }
