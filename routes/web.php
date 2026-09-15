@@ -16,6 +16,7 @@ use App\Http\Controllers\TeachingProgramController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\BiometricController;
+use App\Http\Controllers\WorkScheduleController;
 use App\Models\Invoice;
 use App\Models\Student;
 use App\Models\Attendance;
@@ -121,6 +122,16 @@ Route::middleware(['auth'])->group(function (): void {
         Route::get('test-connection', [BiometricController::class, 'testConnection'])->name('test-connection');
         Route::get('device-settings', [BiometricController::class, 'deviceSettings'])->name('device-settings');
         Route::post('device-settings', [BiometricController::class, 'updateDeviceSettings'])->name('update-device-settings');
+    });
+
+    // Work Schedules
+    Route::prefix('work-schedules')->name('work-schedules.')->group(function (): void {
+        Route::get('/', [WorkScheduleController::class, 'index'])->name('index');
+        Route::post('/', [WorkScheduleController::class, 'store'])->name('store');
+        Route::put('/{workSchedule}', [WorkScheduleController::class, 'update'])->name('update');
+        Route::patch('/{workSchedule}/toggle', [WorkScheduleController::class, 'toggle'])->name('toggle');
+        Route::delete('/{workSchedule}', [WorkScheduleController::class, 'destroy'])->name('destroy');
+        Route::post('/run-check', [WorkScheduleController::class, 'runCheck'])->name('run-check');
     });
 });
 

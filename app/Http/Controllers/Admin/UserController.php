@@ -205,6 +205,7 @@ class UserController extends Controller
             'teacher_class_ids' => ['nullable', 'array'], 'teacher_class_ids.*' => ['integer', 'exists:school_classes,id'],
             'birth_date' => ['nullable', 'date'], 'birth_place' => ['nullable', 'string', 'max:150'], 'address' => ['nullable', 'string', 'max:1000'], 'emergency_contact' => ['nullable', 'string', 'max:255'],
             'contract_type' => ['nullable', 'in:CDI,CDD,Stage,Prestataire'], 'contract_start_date' => ['nullable', 'date'], 'contract_end_date' => ['nullable', 'date', 'after_or_equal:contract_start_date'],
+            'employment_type' => ['nullable', 'in:permanent,non_permanent'],
             'leave_start_date' => ['nullable', 'date'], 'leave_end_date' => ['nullable', 'date', 'after_or_equal:leave_start_date'],
             'monthly_salary_amount' => ['nullable','numeric','min:0'], 'salary_payment_day' => ['nullable','integer','min:1','max:31'],
             'password' => [$updating ? 'nullable' : 'required', 'string', 'min:8', 'confirmed'],
@@ -214,6 +215,9 @@ class UserController extends Controller
         $data['name'] = trim($data['first_name'].' '.$data['last_name']);
         $data['nickname'] = $data['role'] === 'Admin' ? 'Admin' : $data['role'].' '.$data['first_name'];
         if ($data['contract_type'] === 'CDI') $data['contract_end_date'] = null;
+        if (empty($data['employment_type'])) {
+            $data['employment_type'] = ($data['role'] === 'Prof') ? 'non_permanent' : 'permanent';
+        }
         unset($data['teacher_class_ids']);
 
         return $data;

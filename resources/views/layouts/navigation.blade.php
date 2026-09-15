@@ -96,7 +96,10 @@
                     </button>
                 </x-slot>
                 <x-slot name="content">
-                    @can('roles.manage')<x-dropdown-link :href="route('admin.users.index')">{{ __('Accounts') }}</x-dropdown-link>@endcan 
+                    @can('roles.manage')
+                        <x-dropdown-link :href="route('admin.users.index')">{{ __('Accounts') }}</x-dropdown-link>
+                        <x-dropdown-link :href="route('work-schedules.index')">{{ __('Work Schedules') }}</x-dropdown-link>
+                    @endcan 
                     @can('expenses.view')<x-dropdown-link :href="route('expenses.index')">{{ __('Expenses') }}</x-dropdown-link>@endcan
                     <x-dropdown-link :href="route('profile.edit')">{{ __('Profile') }}</x-dropdown-link>
                     <form method="POST" action="{{ route('logout') }}">@csrf<x-dropdown-link :href="route('logout')" onclick="event.preventDefault();this.closest('form').submit();">{{ __('Log Out') }}</x-dropdown-link></form>
@@ -125,7 +128,10 @@
             @can('classes.manage')<x-responsive-nav-link :href="route('classes.index')" :active="request()->routeIs('classes.*')">{{ __('Classes') }}</x-responsive-nav-link>@endcan 
             @can('programs.view')<x-responsive-nav-link :href="route('programs.index')" :active="request()->routeIs('programs.*')">{{ __('Programs') }}</x-responsive-nav-link>@endcan 
             @canany(['statistics.view', 'attendance.view'])<x-responsive-nav-link :href="route('attendance.index')" :active="request()->routeIs('attendance.*') || request()->routeIs('statistics.*')">{{ __('Statistics') }}</x-responsive-nav-link>@endcanany 
-            @can('roles.manage')<x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">{{ __('Accounts') }}</x-responsive-nav-link>@endcan
+            @can('roles.manage')
+                <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">{{ __('Accounts') }}</x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('work-schedules.index')" :active="request()->routeIs('work-schedules.*')">{{ __('Work Schedules') }}</x-responsive-nav-link>
+            @endcan
             <x-responsive-nav-link :href="route('profile.edit')" :active="request()->routeIs('profile.*')">{{ __('Profile') }}</x-responsive-nav-link>
         </div>
         
