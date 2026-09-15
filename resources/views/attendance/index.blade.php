@@ -45,7 +45,7 @@
                                 btn.classList.add('opacity-75', 'cursor-wait');
                             }
                             if (text) {
-                                text.textContent = '{{ __('Synchronisation en cours...') }}';
+                                text.textContent = '{{ __('Syncing in progress...') }}';
                             }
 
                             const formData = new FormData(form);
@@ -67,7 +67,7 @@
                             })
                             .catch((error) => {
                                 console.error('Sync error:', error);
-                                alert('{{ __('Erreur lors de la synchronisation avec la pointeuse.') }}');
+                                alert('{{ __('Error synchronizing with the terminal.') }}');
                                 if (icon) {
                                     icon.classList.remove('animate-spin', 'spinning');
                                     icon.style.animation = '';
@@ -1018,18 +1018,18 @@
                     <svg class="h-5 w-5 text-rose-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 004.07 9.294M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 </div>
                 <div>
-                    <h3 class="text-sm font-bold text-white">{{ __("Supprimer l'empreinte") }}</h3>
-                    <p class="text-xs text-rose-200" id="delete-fp-subtitle">Confirmation requise</p>
+                    <h3 class="text-sm font-bold text-white">{{ __('Delete Fingerprint') }}</h3>
+                    <p class="text-xs text-rose-200" id="delete-fp-subtitle">{{ __('Confirmation Required') }}</p>
                 </div>
             </div>
             <!-- Body -->
             <div class="p-6 space-y-4">
                 <div class="flex items-start gap-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 p-4">
                     <svg class="h-5 w-5 text-rose-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                    <p class="text-xs text-rose-800 dark:text-rose-200" id="delete-fp-msg">Vous êtes sur le point de supprimer l'empreinte biométrique de cette personne. Cette action est irréversible.</p>
+                    <p class="text-xs text-rose-800 dark:text-rose-200" id="delete-fp-msg">{{ __('You are about to delete the biometric fingerprint for this person. This action is irreversible.') }}</p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">{{ __("Confirmez avec votre mot de passe") }}</label>
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">{{ __('Confirm with your password') }}</label>
                     <input type="password" id="delete-fp-password" autocomplete="current-password" placeholder="••••••••" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 outline-none transition">
                     <div id="delete-fp-error" class="hidden mt-2 text-xs text-rose-600 dark:text-rose-400 font-medium"></div>
                 </div>
@@ -1037,11 +1037,11 @@
             <!-- Footer -->
             <div class="border-t border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-end gap-3">
                 <button type="button" onclick="closeDeleteFingerprintModal()" class="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 transition">
-                    {{ __("Annuler") }}
+                    {{ __('Cancel') }}
                 </button>
                 <button type="button" id="delete-fp-confirm-btn" onclick="confirmDeleteFingerprint()" class="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-rose-700 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
                     <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    {{ __("Supprimer l'empreinte") }}
+                    {{ __('Delete Fingerprint') }}
                 </button>
             </div>
         </div>
@@ -1118,6 +1118,44 @@
         // =========================================================================
         // JAVASCRIPT: Pointages & Biometric Enrollment
         // =========================================================================
+
+        const i18n = {
+            noAttendanceFound: @json(__('No attendance records found')),
+            noAttendanceSynced: @json(__('No records match the criteria or no attendance has been synced yet.')),
+            errorLoadingAttendance: @json(__('Error loading attendance records')),
+            punchCount: @json(__('punch(es)')),
+            startEnrollment: @json(__('Start Enrollment')),
+            reEnrollFingerprint: @json(__('Re-enroll Fingerprint')),
+            loadingPersons: @json(__('Loading students and staff...')),
+            errorLoadingBiometric: @json(__('Error loading biometric data')),
+            noResultsFound: @json(__('No results found.')),
+            alreadyEnrolled: @json(__('Already enrolled')),
+            notEnrolled: @json(__('Not enrolled')),
+            enrolled: @json(__('Enrolled')),
+            enrollmentInProgress: @json(__('Enrollment in progress...')),
+            waitingFingerprint: @json(__('Waiting for your fingerprint on the terminal...')),
+            placeFinger3Times: @json(__('Place your finger 3 times consecutively on the ZKTeco sensor.')),
+            sensorLightsUp: @json(__('The sensor lights up and beeps. Please wait until final confirmation...')),
+            errorDuringEnrollment: @json(__('Error during enrollment')),
+            enrollmentSuccess: @json(__('Biometric fingerprint registered successfully!')),
+            enrolledSuccessfully: @json(__('Enrolled successfully')),
+            enrollmentFailed: @json(__('Biometric enrollment failed')),
+            enrollmentTip: @json(__('Tip: ensure the terminal is powered on and place your finger 3 times on the sensor.')),
+            retryEnrollment: @json(__('Retry enrollment')),
+            deleteFingerprint: @json(__('Delete Fingerprint')),
+            deleteConfirmMsg: @json(__('You are about to delete the biometric fingerprint of :name (:id). This action is irreversible.')),
+            enterPassword: @json(__('Please enter your password.')),
+            deleting: @json(__('Deleting...')),
+            incorrectPassword: @json(__('Incorrect password.')),
+            fingerprintDeleted: @json(__('Fingerprint deleted successfully.')),
+            size: @json(__('Size:')),
+            bytes: @json(__('bytes')),
+            loading: @json(__('Loading...')),
+            retrievingData: @json(__('Retrieving data...')),
+            unableToLoadDetails: @json(__('Unable to load details.')),
+            classLabel: @json(__('Class')),
+            methodLabel: @json(__('Method'))
+        };
 
         let enrollDataCache = { students: [], users: [] };
         let activeEnrollTab = 'student';
@@ -1383,10 +1421,10 @@
                 const response = await fetch(`/biometric/pointages?${params.toString()}`, {
                     headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
                 });
-                if (!response.ok) throw new Error('Erreur lors du chargement des pointages');
+                if (!response.ok) throw new Error(i18n.errorLoadingAttendance);
 
                 const data = await response.json();
-                if (countBadge) countBadge.textContent = `${data.total_count} pointage(s)`;
+                if (countBadge) countBadge.textContent = `${data.total_count} ${i18n.punchCount}`;
 
                 if (!data.grouped || data.grouped.length === 0) {
                     container.innerHTML = `
@@ -1394,8 +1432,8 @@
                             <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 border border-indigo-100 dark:border-indigo-900/60 mb-3">
                                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             </div>
-                            <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100">Aucun pointage trouvé</h4>
-                            <p class="text-xs text-slate-500 mt-1">Aucun enregistrement ne correspond aux critères ou aucun pointage n'a encore été synchronisé.</p>
+                            <h4 class="text-sm font-bold text-slate-800 dark:text-slate-100">${i18n.noAttendanceFound}</h4>
+                            <p class="text-xs text-slate-500 mt-1">${i18n.noAttendanceSynced}</p>
                         </div>
                     `;
                     return;
@@ -1410,7 +1448,7 @@
                                     <svg class="h-4 w-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                     <span class="text-xs font-bold text-slate-800 dark:text-slate-100 capitalize">${group.date_human}</span>
                                 </div>
-                                <span class="rounded-full bg-slate-200/70 dark:bg-slate-700 px-2 py-0.5 text-[10px] font-bold text-slate-700 dark:text-slate-200">${group.total} pointage(s)</span>
+                                <span class="rounded-full bg-slate-200/70 dark:bg-slate-700 px-2 py-0.5 text-[10px] font-bold text-slate-700 dark:text-slate-200">${group.total} ${i18n.punchCount}</span>
                             </div>
                             <div class="divide-y divide-slate-100 dark:divide-slate-800">
                     `;
@@ -1457,7 +1495,7 @@
                 container.innerHTML = html;
             } catch (err) {
                 console.error(err);
-                container.innerHTML = `<div class="py-8 text-center text-xs text-rose-500">Erreur de chargement des pointages : ${err.message}</div>`;
+                container.innerHTML = `<div class="py-8 text-center text-xs text-rose-500">${i18n.errorLoadingAttendance} : ${err.message}</div>`;
             } finally {
                 if (refreshIcon) refreshIcon.classList.remove('animate-spin');
             }
@@ -1496,19 +1534,19 @@
             if (statusBox) statusBox.classList.add('hidden');
             if (deleteBtn) deleteBtn.classList.add('hidden');
             if (submitBtn) submitBtn.disabled = true;
-            if (submitText) submitText.textContent = "Lancer l'enregistrement";
+            if (submitText) submitText.textContent = i18n.startEnrollment;
         }
 
         async function loadEnrollData() {
             const listEl = document.getElementById('enroll-person-list');
             if (!listEl) return;
-            listEl.innerHTML = '<div class="py-8 text-center text-xs text-slate-400">Chargement des élèves et personnels...</div>';
+            listEl.innerHTML = `<div class="py-8 text-center text-xs text-slate-400">${i18n.loadingPersons}</div>`;
 
             try {
                 const res = await fetch('/biometric/enroll-data', {
                     headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
                 });
-                if (!res.ok) throw new Error('Erreur de chargement des données biométriques');
+                if (!res.ok) throw new Error(i18n.errorLoadingBiometric);
                 enrollDataCache = await res.json();
 
                 const countStudents = document.getElementById('count-enroll-students');
@@ -1557,7 +1595,7 @@
             });
 
             if (filtered.length === 0) {
-                listEl.innerHTML = '<div class="py-8 text-center text-xs text-slate-400">Aucun résultat trouvé.</div>';
+                listEl.innerHTML = `<div class="py-8 text-center text-xs text-slate-400">${i18n.noResultsFound}</div>`;
                 return;
             }
 
@@ -1584,8 +1622,8 @@
                         </div>
                         <div class="flex items-center gap-2 shrink-0">
                             ${isEnrolled 
-                                ? '<span class="rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Déjà enregistré</span>' 
-                                : '<span class="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-medium text-slate-500">Non enregistré</span>'}
+                                ? `<span class="rounded-full bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 flex items-center gap-1"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>${i18n.alreadyEnrolled}</span>` 
+                                : `<span class="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-medium text-slate-500">${i18n.notEnrolled}</span>`}
                         </div>
                     </div>
                 `;
@@ -1649,19 +1687,19 @@
 
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<svg class="h-4 w-4 animate-spin shrink-0 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> <span>{{ __('Enrôlement en cours...') }}</span>';
+                submitBtn.innerHTML = `<svg class="h-4 w-4 animate-spin shrink-0 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> <span>${i18n.enrollmentInProgress}</span>`;
             }
             if (statusBox) statusBox.className = 'rounded-xl border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/50 p-4 transition-all block shadow-sm';
             if (spinner) {
                 spinner.className = 'h-7 w-7 shrink-0 animate-spin text-indigo-600 dark:text-indigo-400';
                 spinner.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>';
             }
-            if (statusTitle) statusTitle.textContent = "{{ __('En attente de votre empreinte sur le pointeur...') }}";
+            if (statusTitle) statusTitle.textContent = i18n.waitingFingerprint;
             if (statusDesc) {
                 statusDesc.innerHTML = `
                     <div class="mt-1 space-y-1.5 text-xs text-indigo-950 dark:text-indigo-200">
-                        <p class="font-bold text-xs text-indigo-700 dark:text-indigo-300 animate-pulse">👉 {{ __('Posez votre doigt 3 fois consécutivement sur le capteur ZKTeco.') }}</p>
-                        <p class="text-[11px] text-slate-600 dark:text-slate-400">{{ __('Le capteur s\'allume et émet un signal sonore. Veuillez patienter jusqu\'à la validation finale...') }}</p>
+                        <p class="font-bold text-xs text-indigo-700 dark:text-indigo-300 animate-pulse">👉 ${i18n.placeFinger3Times}</p>
+                        <p class="text-[11px] text-slate-600 dark:text-slate-400">${i18n.sensorLightsUp}</p>
                     </div>
                 `;
             }
@@ -1686,7 +1724,7 @@
                 const data = await response.json();
 
                 if (!response.ok || !data.success) {
-                    throw new Error(data.message || "{{ __('Erreur lors de l\'enrôlement') }}");
+                    throw new Error(data.message || i18n.errorDuringEnrollment);
                 }
 
                 if (statusBox) statusBox.className = 'rounded-xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/50 p-4 transition-all block shadow-sm';
@@ -1694,18 +1732,18 @@
                     spinner.className = 'h-7 w-7 shrink-0 text-emerald-600 dark:text-emerald-400';
                     spinner.innerHTML = '<svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
                 }
-                if (statusTitle) statusTitle.textContent = "{{ __('Empreinte biométrique enregistrée avec succès !') }}";
+                if (statusTitle) statusTitle.textContent = i18n.enrollmentSuccess;
                 if (statusDesc) {
                     let details = `<p class="text-xs text-emerald-800 dark:text-emerald-200 font-semibold">${data.message}</p>`;
                     if (data.uid) {
-                        details += `<p class="text-[11px] text-emerald-700 dark:text-emerald-300 font-mono mt-1">UID: ${data.uid} | ID: ${data.identifier}${data.template_size ? ` | Taille: ${data.template_size} octets` : ''}</p>`;
+                        details += `<p class="text-[11px] text-emerald-700 dark:text-emerald-300 font-mono mt-1">UID: ${data.uid} | ID: ${data.identifier}${data.template_size ? ` | ${i18n.size} ${data.template_size} ${i18n.bytes}` : ''}</p>`;
                     }
                     statusDesc.innerHTML = details;
                 }
 
                 if (submitBtn) {
                     submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> <span>{{ __('Enregistré avec succès') }}</span>';
+                    submitBtn.innerHTML = `<svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> <span>${i18n.enrolledSuccessfully}</span>`;
                 }
 
                 // Mark enrolled in cache and refresh
@@ -1725,16 +1763,16 @@
                     spinner.className = 'h-7 w-7 shrink-0 text-rose-600 dark:text-rose-400';
                     spinner.innerHTML = '<svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
                 }
-                if (statusTitle) statusTitle.textContent = "{{ __('Échec de l\'enrôlement biométrique') }}";
+                if (statusTitle) statusTitle.textContent = i18n.enrollmentFailed;
                 if (statusDesc) {
                     statusDesc.innerHTML = `
                         <p class="text-xs text-rose-800 dark:text-rose-200 font-medium">${err.message}</p>
-                        <p class="text-[11px] text-rose-600 dark:text-rose-400 mt-1">{{ __('Conseil : assurez-vous que le pointeur est allumé et posez le doigt 3 fois sur le capteur.') }}</p>
+                        <p class="text-[11px] text-rose-600 dark:text-rose-400 mt-1">${i18n.enrollmentTip}</p>
                     `;
                 }
                 if (submitBtn) {
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> <span>{{ __('Réessayer l\'enregistrement') }}</span>';
+                    submitBtn.innerHTML = `<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> <span>${i18n.retryEnrollment}</span>`;
                 }
             }
         }
@@ -1754,7 +1792,9 @@
                 subtitle.textContent = `${selectedEnrollPerson.name} (${selectedEnrollPerson.identifier})`;
             }
             if (msg && selectedEnrollPerson) {
-                msg.textContent = `Vous êtes sur le point de supprimer l'empreinte biométrique de ${selectedEnrollPerson.name} (${selectedEnrollPerson.identifier}). Cette action est irréversible.`;
+                msg.textContent = i18n.deleteConfirmMsg
+                    .replace(':name', selectedEnrollPerson.name)
+                    .replace(':id', selectedEnrollPerson.identifier);
             }
             if (pwdInput) pwdInput.value = '';
             if (errDiv) { errDiv.textContent = ''; errDiv.classList.add('hidden'); }
@@ -1784,12 +1824,12 @@
             const password = pwdInput?.value?.trim() || '';
 
             if (!password) {
-                if (errDiv) { errDiv.textContent = 'Veuillez saisir votre mot de passe.'; errDiv.classList.remove('hidden'); }
+                if (errDiv) { errDiv.textContent = i18n.enterPassword; errDiv.classList.remove('hidden'); }
                 pwdInput?.focus();
                 return;
             }
 
-            if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.innerHTML = '<svg class="h-3.5 w-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Suppression...'; }
+            if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.innerHTML = `<svg class="h-3.5 w-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> ${i18n.deleting}`; }
             if (errDiv) { errDiv.textContent = ''; errDiv.classList.add('hidden'); }
 
             try {
@@ -1802,7 +1842,7 @@
                 });
                 if (!verifyResp.ok) {
                     const vData = await verifyResp.json().catch(() => ({}));
-                    throw new Error(vData.errors?.password?.[0] || vData.message || 'Mot de passe incorrect.');
+                    throw new Error(vData.errors?.password?.[0] || vData.message || i18n.incorrectPassword);
                 }
 
                 // Password ok, proceed with deletion
@@ -1813,14 +1853,14 @@
                 });
 
                 const data = await response.json();
-                if (!response.ok || !data.success) throw new Error(data.message || 'Erreur');
+                if (!response.ok || !data.success) throw new Error(data.message || i18n.errorDuringEnrollment);
 
                 closeDeleteFingerprintModal();
 
                 // Show success notification
                 const notif = document.createElement('div');
                 notif.className = 'fixed bottom-6 right-6 z-[100] flex items-center gap-3 rounded-2xl bg-emerald-700 text-white px-5 py-3.5 shadow-2xl text-sm font-semibold animate-in fade-in slide-in-from-bottom-4 duration-300';
-                notif.innerHTML = `<svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>${data.message || 'Empreinte supprimée avec succès.'}`;
+                notif.innerHTML = `<svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>${data.message || i18n.fingerprintDeleted}`;
                 document.body.appendChild(notif);
                 setTimeout(() => { notif.style.opacity = '0'; notif.style.transition = 'opacity 0.4s'; setTimeout(() => notif.remove(), 400); }, 3500);
 
@@ -1835,7 +1875,7 @@
             } catch (err) {
                 if (errDiv) { errDiv.textContent = err.message; errDiv.classList.remove('hidden'); }
             } finally {
-                if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.innerHTML = '<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> {{ __("Supprimer l\'empreinte") }}'; }
+                if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.innerHTML = `<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> ${i18n.deleteFingerprint}`; }
                 if (deleteBtn) deleteBtn.disabled = false;
             }
         }
@@ -1851,9 +1891,9 @@
             const presEl = document.getElementById('modal-total-present');
             const listEl = document.getElementById('modal-records-container');
 
-            nameEl.textContent = 'Chargement en cours...';
+            nameEl.textContent = i18n.loading;
             subEl.textContent = '...';
-            listEl.innerHTML = '<div class="py-8 text-center text-xs text-slate-400">Récupération des données...</div>';
+            listEl.innerHTML = `<div class="py-8 text-center text-xs text-slate-400">${i18n.retrievingData}</div>`;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
 
@@ -1886,7 +1926,7 @@
                                     <span class="font-bold text-slate-800">${rec.subject_name}</span>
                                     <span class="rounded px-2 py-0.5 text-[10px] font-bold ${badgeClass}">${rec.status_label}</span>
                                 </div>
-                                <p class="mt-1 text-[11px] text-slate-500">${rec.date} ${rec.time && rec.time !== '—' ? '· ' + rec.time : ''} · Classe: ${rec.class_name} · Méthode: <span class="font-medium">${rec.method}</span></p>
+                                <p class="mt-1 text-[11px] text-slate-500">${rec.date} ${rec.time && rec.time !== '—' ? '· ' + rec.time : ''} · ${i18n.classLabel}: ${rec.class_name} · ${i18n.methodLabel}: <span class="font-medium">${rec.method}</span></p>
                             </div>
                             <span class="text-[10px] text-slate-400">${rec.recorded_by}</span>
                         </div>
@@ -1894,7 +1934,7 @@
                 });
                 listEl.innerHTML = html;
             } catch (err) {
-                listEl.innerHTML = '<div class="py-8 text-center text-xs text-rose-500">Impossible de charger les détails.</div>';
+                listEl.innerHTML = `<div class="py-8 text-center text-xs text-rose-500">${i18n.unableToLoadDetails}</div>`;
             }
         }
 
