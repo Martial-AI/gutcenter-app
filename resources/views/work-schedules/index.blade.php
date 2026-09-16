@@ -108,15 +108,16 @@
                                 <span class="flex-1 text-sm text-slate-600 dark:text-slate-300 font-medium">{{ $slot->name }}</span>
 
                                 <div class="flex items-center gap-2">
-                                    {{-- Active toggle --}}
+                                    {{-- Active switch toggle --}}
                                     <button type="button"
+                                        role="switch"
+                                        aria-checked="{{ $slot->is_active ? 'true' : 'false' }}"
                                         onclick="toggleSlot({{ $slot->id }}, this)"
-                                        class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold border transition
-                                            {{ $slot->is_active
-                                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
-                                                : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-700 dark:text-slate-400 dark:border-slate-600' }}"
+                                        title="{{ $slot->is_active ? __('Active') : __('Inactive') }}"
+                                        class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500/30 {{ $slot->is_active ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700' }}"
                                         data-active="{{ $slot->is_active ? '1' : '0' }}">
-                                        {{ $slot->is_active ? __('Active') : __('Inactive') }}
+                                        <span class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out {{ $slot->is_active ? 'translate-x-4' : 'translate-x-0' }}"
+                                              style="transform: translateX({{ $slot->is_active ? '16px' : '0px' }});"></span>
                                     </button>
 
                                     {{-- Delete button --}}
@@ -370,23 +371,53 @@
             m.classList.remove('flex');
         }
 
-        // ── Toggle active via AJAX ────────────────────────────────────────────
+        // ── Toggle active via AJAX (Switch) ───────────────────────────────────
         async function toggleSlot(id, btn) {
-            const resp = await fetch('/work-schedules/' + id + '/toggle', {
-                method: 'PATCH',
-                headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' }
-            });
-            if (!resp.ok) return;
-            const data = await resp.json();
-            const active = data.is_active;
-            btn.dataset.active = active ? '1' : '0';
-            btn.textContent    = active ? @json(__('Active')) : @json(__('Inactive'));
-            btn.className = 'shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold border transition ' +
-                (active
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
-                    : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-700 dark:text-slate-400 dark:border-slate-600');
-            // Fade row
-            btn.closest('div.flex').style.opacity = active ? '1' : '0.5';
+            btn.disabled = true;
+            try {
+                const resp = await fetch('/work-schedules/' + id + '/toggle', {
+                    method: 'PATCH',
+                    headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' }
+                });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                const active = !!data.is_active;
+                btn.dataset.active = active ? '1' : '0';
+                btn.setAttribute('aria-checked', active ? 'true' : 'false');
+                btn.title = active ? @json(__('Active')) : @json(__('Inactive'));
+
+                // Switch track
+                if (active) {
+                    btn.classList.remove('bg-slate-200', 'dark:bg-slate-700');
+                    btn.classList.add('bg-emerald-500');
+                } else {
+                    btn.classList.remove('bg-emerald-500');
+                    btn.classList.add('bg-slate-200', 'dark:bg-slate-700');
+                }
+
+                // Switch knob
+                const knob = btn.querySelector('span');
+                if (knob) {
+                    knob.style.transform = active ? 'translateX(16px)' : 'translateX(0px)';
+                    if (active) {
+                        knob.classList.remove('translate-x-0');
+                        knob.classList.add('translate-x-4');
+                    } else {
+                        knob.classList.remove('translate-x-4');
+                        knob.classList.add('translate-x-0');
+                    }
+                }
+
+                // Fade row
+                const row = btn.closest('.group');
+                if (row) {
+                    row.classList.toggle('opacity-50', !active);
+                }
+            } catch (e) {
+                console.error('Toggle slot failed', e);
+            } finally {
+                btn.disabled = false;
+            }
         }
 
         // ── Absence Check Modal ───────────────────────────────────────────────
