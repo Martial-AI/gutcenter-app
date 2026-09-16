@@ -749,7 +749,46 @@ def attendance(args):
             except Exception:
                 pass
 
+#code vaovao
+#clear_attendance
+def clear_attendance(args):
+    conn = None
 
+    try:
+        conn = connect_device(args)
+
+        progress("Suppression des historiques de pointage...")
+
+        conn.disable_device()
+        conn.clear_attendance()
+
+        output({
+            "success": True,
+            "cleared": True,
+            "message": "Historiques de pointage supprimés avec succès."
+        })
+
+        return 0
+
+    except Exception as e:
+        output({
+            "success": False,
+            "cleared": False,
+            "message": f"Erreur : {e}"
+        })
+        return 1
+
+    finally:
+        if conn:
+            try:
+                conn.enable_device()
+            except Exception:
+                pass
+
+            try:
+                conn.disconnect()
+            except Exception:
+                pass
 # ============================================================
 # ARGUMENTS
 # ============================================================
@@ -855,9 +894,32 @@ def build_parser():
     p_attendance.add_argument("--ip", default=argparse.SUPPRESS)
     p_attendance.add_argument("--port", type=int, default=argparse.SUPPRESS)
     p_attendance.add_argument("--timeout", type=int, default=argparse.SUPPRESS)
+   
+
+       # Clear attendance
+    p_clear_attendance = subparsers.add_parser(
+        "clear-attendance",
+        help="Supprimer tous les historiques de pointage du terminal"
+    )
+
+    p_clear_attendance.add_argument(
+        "--ip",
+        default=argparse.SUPPRESS
+    )
+
+    p_clear_attendance.add_argument(
+        "--port",
+        type=int,
+        default=argparse.SUPPRESS
+    )
+
+    p_clear_attendance.add_argument(
+        "--timeout",
+        type=int,
+        default=argparse.SUPPRESS
+    )
 
     return parser
-
 
 # ============================================================
 # MAIN
@@ -882,6 +944,9 @@ def main():
 
     if args.command == "attendance":
         return attendance(args)
+
+    if args.command == "clear-attendance":
+        return clear_attendance(args)
 
     parser.print_help()
     return 1
