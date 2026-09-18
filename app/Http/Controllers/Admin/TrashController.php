@@ -10,6 +10,7 @@ use App\Models\TeachingProgram;
 use App\Models\Student;
 use App\Models\SchoolClass;
 use App\Models\User;
+use App\Models\Expense;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -35,6 +36,7 @@ class TrashController extends Controller
             'student' => Student::query()->insert($attributes),
             'school_class' => SchoolClass::query()->insert($attributes),
             'user' => $this->restoreUser($attributes, $deletedItem->payload),
+            'expense' => Expense::query()->insert($attributes),
             default => abort(422, __('This item cannot be restored yet.')),
         };
         activity('corbeille')->causedBy(auth()->user())->log('a restauré : '.$deletedItem->label);

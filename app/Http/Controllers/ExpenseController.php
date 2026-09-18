@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Expense;
 use App\Services\ExpenseService;
 use App\Services\SensitiveActivityNotifier;
+use App\Services\TrashService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ExpenseController extends Controller
@@ -74,6 +77,61 @@ class ExpenseController extends Controller
         );
 
         return back()->with('success', __('Expense added successfully.'));
+    }
+
+    /**
+     * Delete an expense, remove its amount from totals, and record in audit log.
+     * Requires user password confirmation.
+     */
+    public function destroy(Request $request, Expense $expense): RedirectResponse
+    {
+        abort_unless($request->user()?->can('expenses.delete') || $request->user()?->hasRole('Admin'), 403);
+
+        $request->validate([
+            'password_confirmation_action' => ['required', 'string'],
+        ]);
+
+        if (! Hash::check($request->input('password_confirmation_action'), $request->user()->password)) {
+            throw ValidationException::withMessages([
+                'password_confirmation_action' => __('The password is incorrect.'),
+            ]);
+        }
+
+        $reason = $expense->reason;
+        $amount = (float) $expense->amount;
+        $formattedAmount = number_format($amount, 0, ',', ' ').' Ar';
+
+        // If this expense is linked to an employee salary payment, reset payment status to pending
+        // so it does not remain marked as paid after the expense is removed.
+        if ($expense->employee_payment_id) {
+            $expense->employeePayment?->update([
+                'paid_at' => null,
+                'status' => 'pending',
+                'recorded_by' => null,
+                'payment_method' => null,
+                'payment_phone' => null,
+                'transaction_id' => null,
+                'bank_details' => null,
+            ]);
+        }
+
+        TrashService::store('expense', $expense, 'Dépense : '.$reason.' ('.$formattedAmount.')');
+
+        activity('dépenses')
+            ->causedBy($request->user())
+            ->log('Expense deleted: '.$reason);
+
+        SensitiveActivityNotifier::send(
+            __('Expense deleted'),
+            __('Expense deleted: :expense (:amount)', [
+                'expense' => $reason,
+                'amount' => $formattedAmount,
+            ]),
+        );
+
+        $expense->delete();
+
+        return back()->with('success', __('Expense deleted successfully.'));
     }
 
     private function nextReference(): string

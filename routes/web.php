@@ -63,6 +63,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('school-fees/classes/{schoolClass}/registration/{student}/receipt-preview', [SchoolFeeController::class, 'registrationFeeReceiptPreview'])->name('school-fees.registration.receipt-preview');
     Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
     Route::post('expenses', [ExpenseController::class, 'store'])->name('expenses.store');
+    Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
     Route::get('admin/history', [HistoryController::class, 'index'])->name('admin.history.index');
     Route::delete('admin/history/logins', [HistoryController::class, 'destroyLogins'])->name('admin.history.logins.destroy');
     Route::get('admin/trash', [TrashController::class, 'index'])->name('admin.trash.index');

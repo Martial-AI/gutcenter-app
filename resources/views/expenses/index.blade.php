@@ -41,6 +41,9 @@
                                 <th class="px-5 py-3">{{ __('Time') }}</th>
                                 <th class="px-5 py-3">{{ __('Added by') }}</th>
                                 <th class="px-5 py-3 text-right">{{ __('Amount') }}</th>
+                                @if(auth()->user()?->can('expenses.delete') || auth()->user()?->hasRole('Admin'))
+                                    <th class="px-5 py-3 text-right">{{ __('Actions') }}</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -58,9 +61,22 @@
                                     <td class="whitespace-nowrap px-5 py-4 text-slate-600">{{ $expense->spent_at?->format('H:i') ?? $expense->created_at?->format('H:i') ?? '—' }}</td>
                                     <td class="whitespace-nowrap px-5 py-4 text-slate-600">{{ $expense->recordedBy?->localizedFunctionLabel() ?? __('System') }}</td>
                                     <td class="whitespace-nowrap px-5 py-4 text-right"><p class="font-bold text-red-700">{{ number_format((float) $expense->amount, 0, ',', ' ') }} Ar</p></td>
+                                    @if(auth()->user()?->can('expenses.delete') || auth()->user()?->hasRole('Admin'))
+                                        <td class="whitespace-nowrap px-5 py-4 text-right">
+                                            <button type="button"
+                                                    onclick="openDeleteExpenseModal('{{ route('expenses.destroy', $expense) }}', '{{ addslashes($expense->reason) }}', '{{ number_format((float) $expense->amount, 0, ',', ' ') }} Ar')"
+                                                    class="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50/80 px-2.5 py-1.5 text-xs font-semibold text-red-700 shadow-sm transition hover:bg-red-100 hover:border-red-300 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                                                    title="{{ __('Delete expense') }}">
+                                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                                </svg>
+                                                <span>{{ __('Delete') }}</span>
+                                            </button>
+                                        </td>
+                                    @endif
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="px-5 py-12 text-center text-slate-500">{{ __('No expense recorded.') }}</td></tr>
+                                <tr><td colspan="{{ (auth()->user()?->can('expenses.delete') || auth()->user()?->hasRole('Admin')) ? 6 : 5 }}" class="px-5 py-12 text-center text-slate-500">{{ __('No expense recorded.') }}</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -98,4 +114,115 @@
             function closeExpenseModal(){const m=document.getElementById('expense-modal');m.classList.add('hidden');m.classList.remove('flex')}
         </script>
     @endcan
+
+    @if(auth()->user()?->can('expenses.delete') || auth()->user()?->hasRole('Admin'))
+        <div id="delete-expense-modal" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-black/60 p-4 backdrop-blur-sm" style="background-color:rgba(0,0,0,.60)">
+            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl transition-all">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">{{ __('Delete expense') }}</h3>
+                        <p class="text-xs text-slate-500">{{ __('Confirmation required') }}</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 rounded-xl border border-slate-100 bg-slate-50/80 p-3.5 text-xs text-slate-700 space-y-1.5">
+                    <div class="flex justify-between items-start gap-2">
+                        <span class="text-slate-500 font-medium">{{ __('Description') }}:</span>
+                        <span id="delete-expense-desc" class="font-semibold text-slate-900 text-right"></span>
+                    </div>
+                    <div class="flex justify-between items-center gap-2 pt-1 border-t border-slate-200/60">
+                        <span class="text-slate-500 font-medium">{{ __('Amount') }}:</span>
+                        <span id="delete-expense-amount" class="font-bold text-red-600 text-sm"></span>
+                    </div>
+                </div>
+
+                <p class="mt-3 text-xs leading-relaxed text-slate-600">
+                    {{ __('This action will permanently delete this expense and remove its amount from the ledger totals. Please enter your password to confirm.') }}
+                </p>
+
+                <form id="delete-expense-form" method="POST" action="" class="mt-4">
+                    @csrf
+                    @method('DELETE')
+                    <input type="hidden" name="password_confirmation_action" id="delete-expense-password-input">
+
+                    <label class="block text-left">
+                        <span class="text-xs font-semibold text-slate-700">{{ __('Your password') }} <span class="text-red-500">*</span></span>
+                        <input id="delete-expense-password" type="password" required autocomplete="current-password"
+                               placeholder="••••••••"
+                               class="mt-1.5 w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-red-500 focus:ring-red-500">
+                    </label>
+
+                    <div class="mt-6 flex justify-end gap-2.5">
+                        <button type="button" onclick="closeDeleteExpenseModal()" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition">
+                            {{ __('Cancel') }}
+                        </button>
+                        <button type="button" id="confirm-delete-expense-btn" onclick="submitDeleteExpenseModal()" class="inline-flex items-center gap-1.5 rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-800 transition">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                            </svg>
+                            <span>{{ __('Delete') }}</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            function openDeleteExpenseModal(url, desc, amount) {
+                const modal = document.getElementById('delete-expense-modal');
+                const form = document.getElementById('delete-expense-form');
+                const descEl = document.getElementById('delete-expense-desc');
+                const amountEl = document.getElementById('delete-expense-amount');
+                const password = document.getElementById('delete-expense-password');
+
+                form.action = url;
+                descEl.textContent = desc;
+                amountEl.textContent = amount;
+                password.value = '';
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => password.focus(), 50);
+            }
+
+            function closeDeleteExpenseModal() {
+                const modal = document.getElementById('delete-expense-modal');
+                const password = document.getElementById('delete-expense-password');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                password.value = '';
+            }
+
+            function submitDeleteExpenseModal() {
+                const password = document.getElementById('delete-expense-password');
+                if (!password.value.trim()) {
+                    password.focus();
+                    return;
+                }
+                const form = document.getElementById('delete-expense-form');
+                document.getElementById('delete-expense-password-input').value = password.value;
+                const btn = document.getElementById('confirm-delete-expense-btn');
+                btn.disabled = true;
+                btn.classList.add('opacity-70', 'cursor-not-allowed');
+                form.submit();
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const password = document.getElementById('delete-expense-password');
+                if (password) {
+                    password.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            submitDeleteExpenseModal();
+                        }
+                    });
+                }
+            });
+        </script>
+    @endif
 </x-app-layout>
