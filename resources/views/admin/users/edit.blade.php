@@ -23,7 +23,41 @@
             <div class="flex gap-3"><button class="rounded bg-emerald-700 px-4 py-2 text-white">{{ __('Save') }}</button><a href="{{ route('admin.users.show', $user) }}" class="rounded border px-4 py-2">{{ __('Cancel') }}</a></div>
         </form>
     </div>
-    <script>document.addEventListener('DOMContentLoaded',()=>{const i=document.querySelector('[name=teaching_subjects]');if(!i)return;const s=document.createElement('select');s.name=i.name+'[]';s.multiple=true;s.className=i.className;s.innerHTML='<option value="">—</option>@foreach($subjects as $subject)<option value="{{ $subject->name }}">{{ $subject->name }}{{ $subject->code ? ' ('.$subject->code.')' : '' }}</option>@endforeach';i.replaceWith(s);});</script>
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+    const i = document.querySelector('[name=teaching_subjects]');
+    if (!i) return;
+
+    const existingSubjects = @json(
+        collect(explode(',', (string) $user->teaching_subjects))
+            ->map('trim')
+            ->filter()
+            ->values()
+    );
+
+    const s = document.createElement('select');
+    s.name = 'teaching_subjects[]';
+    s.multiple = true;
+    s.className = i.className;
+
+    s.innerHTML = `
+        <option value="">—</option>
+        @foreach($subjects as $subject)
+            <option value="{{ $subject->name }}">
+                {{ $subject->name }}{{ $subject->code ? ' ('.$subject->code.')' : '' }}
+            </option>
+        @endforeach
+    `;
+
+    [...s.options].forEach(option => {
+        if (existingSubjects.includes(option.value)) {
+            option.selected = true;
+        }
+    });
+
+    i.replaceWith(s);
+});
+</script>
 <script>const accountRoleLabels=@json($roleLabels);function updateFunction(){const role=document.getElementById('account-role').value;const first=document.querySelector('[name=first_name]').value.trim();const roleLabel=accountRoleLabels[role]||role;document.getElementById('account-function').value=role==='Admin'?roleLabel:[roleLabel,first].filter(Boolean).join(' ')}function syncContractEnd(){const type=document.querySelector('[name=contract_type]');const end=document.querySelector('[name=contract_end_date]');end.closest('label').classList.toggle('hidden',type.value==='CDI');if(type.value==='CDI')end.value=''}document.getElementById('account-role').addEventListener('change',updateFunction);document.querySelector('[name=first_name]').addEventListener('input',updateFunction);document.querySelector('[name=contract_type]').addEventListener('change',syncContractEnd);const contractGrid=document.querySelector('[name=contract_type]').closest('.grid');contractGrid.insertAdjacentHTML('beforeend',`<label>{{ __('Monthly salary (Ar)') }}<input type="number" min="0" step="0.01" name="monthly_salary_amount" value="{{ old('monthly_salary_amount', $user->monthly_salary_amount) }}" class="mt-1 block w-full rounded border-gray-300"></label><label>{{ __('Salary payment day') }}<input type="number" min="1" max="31" name="salary_payment_day" value="{{ old('salary_payment_day', $user->salary_payment_day ?: 1) }}" class="mt-1 block w-full rounded border-gray-300"></label>`);updateFunction();syncContractEnd();</script>
 <div id="account-photo-choice" class="fixed inset-0 z-[160] hidden items-center justify-center bg-black/60 p-4"><div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"><div class="flex items-center justify-between"><h3 class="text-lg font-semibold">{{ __('Add a photo') }}</h3><button type="button" onclick="closeAccountPhotoChoice()" class="rounded-lg px-3 py-1 text-slate-500">{{ __('Close') }}</button></div><p class="mt-2 text-sm text-slate-600">{{ __('Choose the source of the student photo.') }}</p><div class="mt-5 grid gap-3"><button id="account-photo-camera" type="button" class="rounded-xl bg-emerald-700 px-4 py-3 font-medium text-white">{{ __('Camera') }}</button><button id="account-photo-file" type="button" class="rounded-xl border border-slate-300 px-4 py-3 font-medium text-slate-700">{{ __('Choose a file') }}</button></div></div></div>
 <div id="account-camera" class="fixed inset-0 z-[170] hidden items-start justify-center overflow-y-auto bg-black/65 px-4 py-6 sm:items-center"><div class="my-auto w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl"><div class="relative h-56 bg-slate-950"><button type="button" onclick="closeAccountCamera()" class="absolute right-3 top-3 z-10 rounded-full bg-black/70 px-3 py-1.5 text-xs text-white">{{ __('Close') }}</button><video id="account-video" class="h-full w-full object-cover" autoplay playsinline muted></video><img id="account-preview" class="hidden h-full w-full object-cover" alt="{{ __('Captured photo') }}"></div><div class="flex min-h-[110px] items-center justify-center gap-4 bg-white p-4"><button id="account-capture" type="button" aria-label="{{ __('Capture') }}" class="h-16 w-16 rounded-full border-4 border-emerald-100 bg-emerald-700 shadow-lg"></button><div id="account-review" class="hidden gap-3"><button type="button" onclick="retryAccountPhoto()" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">{{ __('Retry') }}</button><button type="button" onclick="saveAccountPhoto()" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm text-white">{{ __('Save') }}</button></div></div></div></div><canvas id="account-canvas" class="hidden"></canvas>

@@ -220,7 +220,15 @@ class UserController extends Controller
         }
         unset($data['teacher_class_ids']);
 
-        return $data;
+	if (isset($data['teaching_subjects'])) {
+        $data['teaching_subjects'] = collect(
+        is_array($data['teaching_subjects'])
+            ? $data['teaching_subjects']
+            : explode(',', (string) $data['teaching_subjects'])
+   	     )->map('trim')->filter()->unique()->implode(', ');
+	}
+
+	return $data;        
     }
 
     private function syncTeacherAssignments(User $user, string $role, Request $request): void
