@@ -254,6 +254,12 @@ class StudentController extends Controller
         return $cards->pdf($student)->download("carte-{$student->student_number}.pdf");
     }
 
+    public function cardPreview(Student $student, StudentCardService $cards): View
+    {
+        $this->authorize('view', $student);
+        return view('students.card-exact', $cards->viewData($student, false));
+    }
+
     public function enrollmentReceipt(Request $request, Student $student): \Symfony\Component\HttpFoundation\Response
     {
         $this->authorize('view', $student);

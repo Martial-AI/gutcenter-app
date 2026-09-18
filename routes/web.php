@@ -87,6 +87,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('admin/users/scan', [UserController::class, 'scanQr'])->name('admin.users.scan');
     Route::get('admin/users/{user}/photo', [UserController::class, 'photo'])->name('admin.users.photo');
     Route::get('admin/users/{user}/card', [UserController::class, 'card'])->name('admin.users.card');
+    Route::get('admin/users/{user}/card-preview', [UserController::class, 'cardPreview'])->name('admin.users.card-preview');
     Route::get('admin/users/{user}', [UserController::class, 'show'])->name('admin.users.show');
     Route::get('admin/users/{user}/edit', [UserController::class, 'edit'])->name('admin.users.edit');
     Route::put('admin/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
@@ -98,6 +99,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('admin/users/{user}/salary/{payment}/receipt-preview', [UserController::class, 'salaryReceiptPreview'])->name('admin.users.salary.receipt-preview');
     Route::delete('admin/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
     Route::get('students/{student}/card', [StudentController::class, 'card'])->name('students.card');
+    Route::get('students/{student}/card-preview', [StudentController::class, 'cardPreview'])->name('students.card-preview');
     Route::get('students/{student}/photo', [StudentController::class, 'photo'])->name('students.photo');
     Route::get('students/{student}/enrollment-receipt', [StudentController::class, 'enrollmentReceipt'])->name('students.enrollment-receipt');
     Route::get('students/{student}/enrollment-receipt-preview', [StudentController::class, 'enrollmentReceiptPreview'])->name('students.enrollment-receipt-preview');

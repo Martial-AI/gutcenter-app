@@ -10,38 +10,63 @@ use Throwable;
 class AuthSecurityNotifier
 {
     /**
-     * Send email alert and in-app notification when an administrator account
+     * Send email alert and in-app notification when an account (admin, teacher, secretary, etc.)
      * reaches 5 failed login attempts.
      */
-    public static function notifyAdminFailedAttempts(User $admin, string $ip, ?string $browser = null): void
+    public static function notifyFailedAttempts(User $user, string $ip, ?string $browser = null): void
     {
         $date = now()->format('d/m/Y à H:i:s');
+        $roleLabel = $user->localizedRoleLabel();
 
         // 1. In-app admin notification
         try {
             SensitiveActivityNotifier::send(
-                'Alerte Sécurité Administrateur',
-                "5 tentatives de connexion échouées ont été détectées sur le compte administrateur {$admin->name} ({$admin->email}). IP : {$ip}."
+                __('Alerte Sécurité Connexion'),
+                __('5 tentatives de connexion échouées ont été détectées sur le compte :role :name (:email). IP : :ip.', [
+                    'role' => $roleLabel,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'ip' => $ip,
+                ])
             );
         } catch (Throwable $e) {
-            Log::warning("Could not send in-app notification for admin failed attempts: " . $e->getMessage());
+            Log::warning("Could not send in-app notification for failed attempts: " . $e->getMessage());
         }
 
-        // 2. Email alert to the administrator
+        // 2. Activity history logging
+        try {
+            activity('connexion')
+                ->performedOn($user)
+                ->log("5 tentatives de connexion échouées sur le compte {$roleLabel} {$user->name}");
+        } catch (Throwable $e) {
+            Log::warning("Could not log activity for failed login: " . $e->getMessage());
+        }
+
+        // 3. Email alert to the account owner
         try {
             Mail::send('emails.auth.admin-failed-attempts', [
-                'admin' => $admin,
+                'admin' => $user,
+                'user' => $user,
+                'roleLabel' => $roleLabel,
                 'ip' => $ip,
                 'date' => $date,
                 'browser' => $browser,
                 'resetUrl' => 'https://gutcenter.taila5e2fd.ts.net/forgot-password',
-            ], function ($message) use ($admin): void {
-                $message->to($admin->email)
+            ], function ($message) use ($user): void {
+                $message->to($user->email)
                     ->subject(__('[GUT Center] Alerte de sécurité : 5 tentatives de connexion échouées'));
             });
         } catch (Throwable $e) {
-            Log::warning("Could not send security email to admin {$admin->email}: " . $e->getMessage());
+            Log::warning("Could not send security email to {$user->email}: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Backward-compatible alias for admin accounts.
+     */
+    public static function notifyAdminFailedAttempts(User $admin, string $ip, ?string $browser = null): void
+    {
+        self::notifyFailedAttempts($admin, $ip, $browser);
     }
 
     /**
@@ -52,14 +77,30 @@ class AuthSecurityNotifier
     {
         $date = now()->format('d/m/Y à H:i:s');
 
+        $roleLabel = $suspendedUser->localizedRoleLabel();
+
         // 1. In-app notification to all admins
         try {
             SensitiveActivityNotifier::send(
-                'Compte suspendu automatiquement',
-                "Le compte de {$suspendedUser->name} ({$suspendedUser->email}) a été suspendu automatiquement suite à plusieurs tentatives échouées. IP : {$ip}."
+                __('Compte suspendu automatiquement'),
+                __("Le compte :role de :name (:email) a été suspendu automatiquement suite à plusieurs tentatives échouées. IP : :ip.", [
+                    'role' => $roleLabel,
+                    'name' => $suspendedUser->name,
+                    'email' => $suspendedUser->email,
+                    'ip' => $ip,
+                ])
             );
         } catch (Throwable $e) {
             Log::warning("Could not send in-app notification for suspended account: " . $e->getMessage());
+        }
+
+        // 2. Activity history logging
+        try {
+            activity('connexion')
+                ->performedOn($suspendedUser)
+                ->log("Compte {$roleLabel} {$suspendedUser->name} suspendu automatiquement");
+        } catch (Throwable $e) {
+            Log::warning("Could not log activity for suspended account: " . $e->getMessage());
         }
 
         // 2. Email to the suspended user

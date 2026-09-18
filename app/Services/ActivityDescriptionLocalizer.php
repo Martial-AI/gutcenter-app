@@ -82,6 +82,12 @@ final class ActivityDescriptionLocalizer
             ['/^a réinitialisé le mot de passe du compte (?<account>.+)$/iu', 'Reset password for account :account', ['account']],
             ['/^a supprimé le compte (?<account>.+)$/iu', 'Deleted account :account', ['account']],
             ['/^Expense added:\s*(?<expense>.+)$/iu', 'Expense added: :expense', ['expense']],
+            // Biometric logs
+            ['/^Enr[oô]lement biom[é]trique r[é]ussi pour (?<name>.+?) \((?<identifier>[^)]+)\)$/iu', 'Successful biometric enrollment for :name (:identifier)', ['name', 'identifier']],
+            ['/^Suppression de l\'empreinte biom[é]trique pour (?<name>.+?) \((?<identifier>[^)]+)\)$/iu', 'Biometric fingerprint removed for :name (:identifier)', ['name', 'identifier']],
+            // Auth security logs
+            ['/^5 tentatives de connexion [é]chou[é]es sur le compte (?<role>.+?) (?<name>.+)$/iu', '5 failed login attempts on :role account :name', ['role', 'name']],
+            ['/^Compte (?<role>.+?) (?<name>.+?) suspendu automatiquement$/iu', ':role account :name automatically suspended', ['role', 'name']],
         ];
     }
 

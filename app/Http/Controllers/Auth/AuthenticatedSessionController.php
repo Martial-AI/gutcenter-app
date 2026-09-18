@@ -111,10 +111,8 @@ class AuthenticatedSessionController extends Controller
 
                 $deviceBrowser = $request->string('device_browser')->toString() ?: $request->header('User-Agent');
 
-                // If admin account reached 5 failed attempts, send security alert email & in-app notification
-                if ($user->hasRole('Admin')) {
-                    AuthSecurityNotifier::notifyAdminFailedAttempts($user, $request->ip(), $deviceBrowser);
-                }
+                // Send security alert email & in-app notification on 5 failed attempts for any account
+                AuthSecurityNotifier::notifyFailedAttempts($user, $request->ip(), $deviceBrowser);
 
                 // After 2 lockouts
                 if ($lockouts >= 2) {

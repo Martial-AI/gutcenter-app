@@ -38,6 +38,10 @@
                         <td style="padding: 6px 0; color: #7f1d1d; font-weight: 700; font-size: 13px; text-align: right;">{{ $user->email }}</td>
                     </tr>
                     <tr>
+                        <td style="padding: 6px 0; color: #991b1b; font-weight: 600; font-size: 13px;">{{ __('Poste / Rôle :') }}</td>
+                        <td style="padding: 6px 0; color: #7f1d1d; font-weight: 700; font-size: 13px; text-align: right;">{{ $user->localizedRoleLabel() }}</td>
+                    </tr>
+                    <tr>
                         <td style="padding: 6px 0; color: #991b1b; font-weight: 600; font-size: 13px;">{{ __('Statut actuel :') }}</td>
                         <td style="padding: 6px 0; color: #dc2626; font-weight: 800; font-size: 13px; text-align: right;">{{ __('Suspendu / Inactif') }}</td>
                     </tr>

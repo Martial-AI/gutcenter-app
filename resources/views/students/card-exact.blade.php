@@ -311,6 +311,7 @@
     .face { width:420pt; height:220pt; }
   }
 
+@if(!empty($isPdf))
   /* Dompdf renders this view as the downloadable card, so remove the web-only
      wrapper and preserve the model's proportions on a two-page PDF. */
   @page { size:420pt 220pt; margin:0; }
@@ -342,6 +343,30 @@
   .info-pill { background:#3a2fc4; }
   .email-tag { position:absolute; left:0; right:0; bottom:43px; margin:0 auto; width:max-content; }
   .footer-band { position:absolute; left:0; right:0; bottom:0; background:#16209b; }
+@else
+  :root {
+    --card-w: 480px;
+    --card-h: 295px;
+  }
+  body {
+    padding: 20px 12px;
+    min-height: auto;
+    background: transparent;
+  }
+  .cards-row {
+    gap: 24px;
+    justify-content: center;
+  }
+  .stage {
+    width: var(--card-w);
+    max-width: 100%;
+  }
+  .card-label {
+    margin-bottom: 8px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+@endif
 </style>
 </head>
 <body>
@@ -439,17 +464,19 @@
   </div>
 
 <script>
-  // Generate a QR code (points to student ID record — change the text/URL as needed)
-  const qrData = "ST26-0001 | JAOMAMY MARTIAL | GUT Center Ambilobe";
-
-  new QRCode(document.getElementById("qrcode"), {
-    text: qrData,
-    width: 100,
-    height: 100,
-    colorDark: "#16209b",
-    colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.H
-  });
+  // Only generate demo QR code if no dynamic SVG QR was provided
+  const qrContainer = document.getElementById("qrcode");
+  if (qrContainer && !qrContainer.querySelector("img")) {
+    const qrData = "ST26-0001 | JAOMAMY MARTIAL | GUT Center Ambilobe";
+    new QRCode(qrContainer, {
+      text: qrData,
+      width: 100,
+      height: 100,
+      colorDark: "#16209b",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  }
 </script>
 
 </body>

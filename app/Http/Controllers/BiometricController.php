@@ -8,10 +8,11 @@ use App\Models\FingerprintRegistration;
 use App\Models\Student;
 use App\Models\User;
 use App\Services\ZKTecoService;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+
 
 class BiometricController extends Controller
 {
@@ -132,6 +133,23 @@ class BiometricController extends Controller
             ]
         );
 
+        // Audit trail — log the biometric enrollment
+        try {
+            activity('biometrique')
+                ->causedBy(auth()->user())
+                ->withProperties([
+                    'identifier'   => $identifier,
+                    'entity_type'  => $entityType,
+                    'entity_id'    => $entityId,
+                    'finger_index' => $fingerIndex,
+                    'device_uid'   => $deviceResult['uid'] ?? null,
+                    'device_ip'    => $zk->getIp(),
+                ])
+                ->log("Enrôlement biométrique réussi pour {$name} ({$identifier})");
+        } catch (\Throwable $e) {
+            Log::warning('Could not log biometric enrollment activity: ' . $e->getMessage());
+        }
+
         return response()->json([
             'success' => true,
             'identifier' => $identifier,
@@ -198,7 +216,24 @@ public function destroy(Request $request): JsonResponse
      * Dans les deux cas, la base Laravel peut être nettoyée.
      */
     if ($reg) {
+        $deletedName = $reg->name ?? $identifier;
         $reg->delete();
+    } else {
+        $deletedName = $identifier;
+    }
+
+    // Audit trail — log the biometric deletion
+    try {
+        activity('biometrique')
+            ->causedBy(auth()->user())
+            ->withProperties([
+                'identifier'     => $identifier,
+                'device_deleted' => $deviceResult['deleted'] ?? false,
+                'device_ip'      => $zk->getIp(),
+            ])
+            ->log("Suppression de l'empreinte biométrique pour {$deletedName} ({$identifier})");
+    } catch (\Throwable $e) {
+        Log::warning('Could not log biometric deletion activity: ' . $e->getMessage());
     }
 
     return response()->json([

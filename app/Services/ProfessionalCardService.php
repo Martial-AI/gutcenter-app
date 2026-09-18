@@ -9,7 +9,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class ProfessionalCardService
 {
-    public function pdf(User $user): \Barryvdh\DomPDF\PDF
+    public function viewData(User $user, bool $isPdf = false): array
     {
         $user->loadMissing(['teacherAssignments.schoolClass', 'teacherAssignments.subject']);
         $number = $user->professional_number ?: 'PA'.now()->format('y').'-'.str_pad((string) $user->id, 3, '0', STR_PAD_LEFT);
@@ -39,7 +39,12 @@ class ProfessionalCardService
         $cardIsProfessional = true;
         $student = null; $class = null;
 
-        return Pdf::loadView('students.card-exact', compact('student', 'class', 'qr', 'logo', 'photo', 'cardName', 'cardRole', 'cardId', 'cardClass', 'cardBirthDate', 'cardAddress', 'cardFunction', 'cardPhone', 'cardIsProfessional'))
+        return compact('student', 'class', 'qr', 'logo', 'photo', 'cardName', 'cardRole', 'cardId', 'cardClass', 'cardBirthDate', 'cardAddress', 'cardFunction', 'cardPhone', 'cardIsProfessional', 'isPdf');
+    }
+
+    public function pdf(User $user): \Barryvdh\DomPDF\PDF
+    {
+        return Pdf::loadView('students.card-exact', $this->viewData($user, true))
             ->setPaper([0, 0, 420, 220]);
     }
 }

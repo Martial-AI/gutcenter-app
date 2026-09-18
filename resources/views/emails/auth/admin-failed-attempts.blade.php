@@ -31,21 +31,23 @@
             <h1 class="title">{{ __('5 tentatives de connexion échouées') }}</h1>
         </div>
 
+@php($account = $user ?? $admin)
+@php($role = $roleLabel ?? ($account ? $account->localizedRoleLabel() : __('Administrateur')))
         <div class="content">
-            <p class="greeting">{{ __('Bonjour :name,', ['name' => $admin->name]) }}</p>
+            <p class="greeting">{{ __('Bonjour :name,', ['name' => $account->name]) }}</p>
             <p class="text">
-                {{ __('Nous vous informons que cinq (5) tentatives consécutives de connexion avec un mot de passe incorrect ont été détectées sur votre compte administrateur.') }}
+                {{ __('Nous vous informons que cinq (5) tentatives consécutives de connexion avec un mot de passe incorrect ont été détectées sur votre compte (:role).', ['role' => $role]) }}
             </p>
 
             <div class="details-box">
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
                         <td style="padding: 6px 0; color: #92400e; font-weight: 600; font-size: 13px;">{{ __('Compte concerné :') }}</td>
-                        <td style="padding: 6px 0; color: #78350f; font-weight: 700; font-size: 13px; text-align: right;">{{ $admin->email }}</td>
+                        <td style="padding: 6px 0; color: #78350f; font-weight: 700; font-size: 13px; text-align: right;">{{ $account->email }}</td>
                     </tr>
                     <tr>
-                        <td style="padding: 6px 0; color: #92400e; font-weight: 600; font-size: 13px;">{{ __('Rôle :') }}</td>
-                        <td style="padding: 6px 0; color: #78350f; font-weight: 700; font-size: 13px; text-align: right;">{{ __('Administrateur') }}</td>
+                        <td style="padding: 6px 0; color: #92400e; font-weight: 600; font-size: 13px;">{{ __('Poste / Rôle :') }}</td>
+                        <td style="padding: 6px 0; color: #78350f; font-weight: 700; font-size: 13px; text-align: right;">{{ $role }}</td>
                     </tr>
                     <tr>
                         <td style="padding: 6px 0; color: #92400e; font-weight: 600; font-size: 13px;">{{ __('Adresse IP :') }}</td>

@@ -9,7 +9,7 @@
         @php($firstName = $user->first_name ?: explode(' ', $user->name)[0])
         @php($functionLabel = $primaryRole ? ($primaryRole === 'Admin' ? ($roleLabels['Admin'] ?? __('Admin')) : trim(($roleLabels[$primaryRole] ?? __($primaryRole)) . ' ' . $firstName)) : __('Account'))
         <section class="overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-800 to-emerald-600 p-6 text-white shadow-lg sm:p-8">
-            <div class="flex flex-col justify-between gap-6 sm:flex-row sm:items-center"><div class="flex items-center gap-5">@if($user->photo_path)<img src="{{ route('admin.users.photo', $user) }}" alt="{{ __('Profile photo') }}" class="h-20 w-20 shrink-0 rounded-full object-cover ring-4 ring-white/30">@else<div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-white/20 text-2xl font-bold ring-4 ring-white/20">{{ $initials }}</div>@endif<div><p class="text-sm font-medium text-emerald-100">{{ $functionLabel }}</p><h3 class="mt-1 text-3xl font-bold tracking-tight">{{ $user->name }}</h3><p class="mt-2 text-emerald-100">{{ $user->email }}</p></div></div><div class="flex flex-wrap gap-3"><span class="rounded-full px-4 py-2 text-sm font-semibold {{ $user->is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">{{ $user->is_active ? __('Active') : __('Suspended') }}</span><a href="{{ route('admin.users.edit', $user) }}" class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-emerald-800 shadow-sm hover:bg-emerald-50">{{ __('Edit') }}</a><a href="{{ route('admin.users.index') }}" class="rounded-lg border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">{{ __('Back') }}</a></div></div>
+            <div class="flex flex-col justify-between gap-6 sm:flex-row sm:items-center"><div class="flex items-center gap-5">@if($user->photo_path)<img src="{{ route('admin.users.photo', $user) }}" alt="{{ __('Profile photo') }}" class="h-20 w-20 shrink-0 rounded-full object-cover ring-4 ring-white/30">@else<div class="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-white/20 text-2xl font-bold ring-4 ring-white/20">{{ $initials }}</div>@endif<div><p class="text-sm font-medium text-emerald-100">{{ $functionLabel }}</p><h3 class="mt-1 text-3xl font-bold tracking-tight">{{ $user->name }}</h3><p class="mt-2 text-emerald-100">{{ $user->email }}</p></div></div><div class="flex flex-wrap gap-3"><span class="rounded-full px-4 py-2 text-sm font-semibold {{ $user->is_active ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">{{ $user->is_active ? __('Active') : __('Suspended') }}</span><button type="button" onclick="openProfessionalCardModal()" class="rounded-lg bg-white/20 px-4 py-2 text-sm font-semibold text-white hover:bg-white/30 transition shadow-sm">{{ app()->getLocale() === 'fr' ? 'Carte pro' : __('Professional card') }}</button><a href="{{ route('admin.users.edit', $user) }}" class="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-emerald-800 shadow-sm hover:bg-emerald-50">{{ __('Edit') }}</a><a href="{{ route('admin.users.index') }}" class="rounded-lg border border-white/40 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10">{{ __('Back') }}</a></div></div>
         </section>
         <div class="grid gap-6 lg:grid-cols-2">
             <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100"><div class="mb-5 flex items-center gap-3"><span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-lg text-emerald-700">◉</span><div><h4 class="font-semibold text-gray-900">{{ __('Personal information') }}</h4><p class="text-sm text-gray-500">{{ __('Identity and personal details') }}</p></div></div><dl class="divide-y divide-gray-100 text-sm"><div class="flex justify-between gap-6 py-3"><dt class="text-gray-500">{{ __('First name') }}</dt><dd class="text-right font-medium text-gray-900">{{ $user->first_name ?: '—' }}</dd></div><div class="flex justify-between gap-6 py-3"><dt class="text-gray-500">{{ __('Last name') }}</dt><dd class="text-right font-medium text-gray-900">{{ $user->last_name ?: '—' }}</dd></div><div class="flex justify-between gap-6 py-3"><dt class="text-gray-500">{{ __('CIN') }}</dt><dd class="text-right font-medium text-gray-900">{{ $user->cin ?: '—' }}</dd></div><div class="flex justify-between gap-6 py-3"><dt class="text-gray-500">{{ __('Birth date') }}</dt><dd class="text-right font-medium text-gray-900">{{ optional($user->birth_date)->format('d/m/Y') ?: '—' }}</dd></div><div class="flex justify-between gap-6 py-3"><dt class="text-gray-500">{{ __('Birth place') }}</dt><dd class="text-right font-medium text-gray-900">{{ $user->birth_place ?: '—' }}</dd></div><div class="flex justify-between gap-6 py-3"><dt class="text-gray-500">{{ __('Address') }}</dt><dd class="max-w-[55%] text-right font-medium text-gray-900">{{ $user->address ?: '—' }}</dd></div></dl></section>
@@ -115,7 +115,54 @@ window.submitSalaryPayment=function(){
     salaryForm.submit();
 };
 </script>
-<script>document.addEventListener('DOMContentLoaded',()=>{const section=document.querySelector('section.bg-gradient-to-r');const actions=section?.querySelector('.flex.flex-wrap.gap-3');if(!actions||actions.querySelector('[data-professional-card]'))return;const link=document.createElement('a');link.dataset.professionalCard='1';link.href='{{ route('admin.users.card', $user) }}';link.className='rounded-lg bg-white/20 px-4 py-2 text-sm font-semibold text-white hover:bg-white/30';link.textContent=@json(app()->getLocale()==='fr'?'Carte pro':'Professional card');const active=actions.querySelector('span');active?.after(link);});</script>
+<div id="professional-card-modal" class="fixed inset-0 z-[160] hidden items-center justify-center bg-black/60 p-4 backdrop-blur-sm" aria-hidden="true">
+    <div class="flex w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" style="height:min(88vh,720px)">
+        <div class="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-3.5">
+            <div class="flex items-center gap-2">
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 text-base font-bold">🪪</span>
+                <h3 class="font-bold text-slate-900 text-base sm:text-lg">{{ __('Professional card') }} — {{ $user->name }}</h3>
+            </div>
+            <button type="button" onclick="closeProfessionalCardModal()" class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <iframe id="professional-card-iframe" class="min-h-0 flex-1 w-full bg-slate-50" title="{{ __('Professional card') }}" src="about:blank"></iframe>
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-5 py-3">
+            <span class="text-xs text-slate-500">{{ __('Recto & Verso view') }}</span>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="closeProfessionalCardModal()" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-100 transition">{{ __('Close') }}</button>
+                <a href="{{ route('admin.users.card', $user) }}" class="inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800 transition">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    {{ __('Download') }}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+const professionalCardPreviewUrl = @json(route('admin.users.card-preview', $user));
+function openProfessionalCardModal() {
+    const modal = document.getElementById('professional-card-modal');
+    const iframe = document.getElementById('professional-card-iframe');
+    if (!modal || !iframe) return;
+    if (iframe.src === 'about:blank' || !iframe.src) {
+        iframe.src = professionalCardPreviewUrl;
+    }
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.classList.add('overflow-hidden');
+}
+function closeProfessionalCardModal() {
+    const modal = document.getElementById('professional-card-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.classList.remove('overflow-hidden');
+}
+document.getElementById('professional-card-modal')?.addEventListener('click', event => {
+    if (event.target.id === 'professional-card-modal') closeProfessionalCardModal();
+});
+</script>
 @if($primaryRole === 'Prof')
     @php($assignedClasses = $user->teacherAssignments->pluck('schoolClass.name')->filter()->unique()->values())
     <section class="mx-auto mb-6 max-w-5xl rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 sm:px-6 lg:px-8">

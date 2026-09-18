@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 
 class StudentCardService
 {
-    public function pdf(Student $student): \Barryvdh\DomPDF\PDF
+    public function viewData(Student $student, bool $isPdf = false): array
     {
         $qr = base64_encode(QrCode::format('svg')->size(180)->generate($student->qr_token));
         $student->loadMissing(['guardians', 'enrollments.schoolClass']);
@@ -36,7 +36,13 @@ class StudentCardService
         $cardFunction = __('Student');
         $cardPhone = $student->guardians->first()?->phone;
         $cardIsProfessional = false;
-        return Pdf::loadView('students.card-exact', compact('student', 'qr', 'class', 'logo', 'photo', 'cardName', 'cardRole', 'cardId', 'cardClass', 'cardBirthDate', 'cardAddress', 'cardFunction', 'cardPhone', 'cardIsProfessional'))
+
+        return compact('student', 'qr', 'class', 'logo', 'photo', 'cardName', 'cardRole', 'cardId', 'cardClass', 'cardBirthDate', 'cardAddress', 'cardFunction', 'cardPhone', 'cardIsProfessional', 'isPdf');
+    }
+
+    public function pdf(Student $student): \Barryvdh\DomPDF\PDF
+    {
+        return Pdf::loadView('students.card-exact', $this->viewData($student, true))
             ->setPaper([0, 0, 420, 220]);
     }
 

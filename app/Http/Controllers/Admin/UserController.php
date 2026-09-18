@@ -163,6 +163,12 @@ class UserController extends Controller
         return $cards->pdf($user)->download('carte-pro-'.$user->professional_number.'.pdf');
     }
 
+    public function cardPreview(User $user, ProfessionalCardService $cards): View
+    {
+        $this->authorizeAdmin();
+        return view('students.card-exact', $cards->viewData($user, false));
+    }
+
     public function resetPassword(Request $request, User $user): RedirectResponse
     {
         $this->authorizeAdmin(); $this->confirmAdminPassword($request);
