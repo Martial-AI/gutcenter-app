@@ -464,7 +464,9 @@
   ,"For example: supplies": "For example: supplies"
   ,"Category": "Category"
   ,"Description": "Description"
-  ,"statistics.view": "View statistics and analytics",
+  ,"statistics.view": "Statistics",
+  "View statistics and analytics": "Statistics",
+  "Delete connection history": "Delete connection history",
   "Statistics": "Statistics",
   "Attendance & Statistics": "Attendance and Statistics",
   "Attendance and Statistics": "Attendance and Statistics",

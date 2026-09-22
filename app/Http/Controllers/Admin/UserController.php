@@ -68,7 +68,7 @@ class UserController extends Controller
     public function create(): View
     {
         $this->authorizeAdmin();
-        return view('admin.users.create', ['roles' => ['Prof', 'Secrétaire', 'Trésorier', 'Directeur General'], 'permissions' => Permission::where('name', '!=', 'accounts.reset_password')->orderBy('name')->get(), 'classes' => SchoolClass::orderBy('name')->get(), 'subjects' => Subject::where('is_active', true)->orderBy('name')->get()]);
+        return view('admin.users.create', ['roles' => ['Prof', 'Secrétaire', 'Trésorier', 'Directeur General'], 'permissions' => $this->orderedPermissions(), 'classes' => SchoolClass::orderBy('name')->get(), 'subjects' => Subject::where('is_active', true)->orderBy('name')->get()]);
     }
 
     public function scanQr(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
@@ -104,7 +104,7 @@ class UserController extends Controller
     {
         $this->authorizeAdmin();
         $user->load('teacherAssignments');
-        return view('admin.users.edit', ['user' => $user, 'roles' => ['Admin', 'Prof', 'Secrétaire', 'Trésorier', 'Directeur General'], 'permissions' => Permission::where('name', '!=', 'accounts.reset_password')->orderBy('name')->get(), 'assignedPermissions' => $user->getDirectPermissions()->pluck('name')->all(), 'classes' => SchoolClass::orderBy('name')->get(), 'subjects' => Subject::where('is_active', true)->orderBy('name')->get(), 'assignedClassIds' => $user->teacherAssignments->pluck('school_class_id')->all()]);
+        return view('admin.users.edit', ['user' => $user, 'roles' => ['Admin', 'Prof', 'Secrétaire', 'Trésorier', 'Directeur General'], 'permissions' => $this->orderedPermissions(), 'assignedPermissions' => $user->getDirectPermissions()->pluck('name')->all(), 'classes' => SchoolClass::orderBy('name')->get(), 'subjects' => Subject::where('is_active', true)->orderBy('name')->get(), 'assignedClassIds' => $user->teacherAssignments->pluck('school_class_id')->all()]);
     }
 
     public function update(Request $request, User $user): RedirectResponse
@@ -342,5 +342,18 @@ class UserController extends Controller
     private function record(User $user, string $description): void
     {
         activity('comptes')->causedBy(auth()->user())->performedOn($user)->log($description);
+    }
+
+    private function orderedPermissions(): \Illuminate\Support\Collection
+    {
+        $keys = array_keys(config('permissions.labels', []));
+
+        return Permission::where('name', '!=', 'accounts.reset_password')
+            ->get()
+            ->sortBy(function ($perm) use ($keys) {
+                $pos = array_search($perm->name, $keys, true);
+                return $pos === false ? 999 : $pos;
+            })
+            ->values();
     }
 }
