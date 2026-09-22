@@ -3,7 +3,7 @@
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
                 <h2 class="text-xl font-bold tracking-tight text-slate-800">{{ __('Course Attendance') }}</h2>
-                <p class="mt-0.5 text-xs text-slate-500">{{ __('Student attendance tracking for your assigned classes and courses.') }}</p>
+                <p class="mt-0.5 text-xs text-slate-500">{{ __('Suivi des présences de vos élèves pour vos classes et cours assignés.') }}</p>
             </div>
             <div class="flex items-center gap-2">
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 border border-emerald-200 shadow-sm">
@@ -85,7 +85,7 @@
                     <div>
                         <span class="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
                             <span class="h-2 w-2 rounded-full bg-emerald-600"></span>
-                            {{ __('Présents') }} (Vert)
+                            {{ __('Présents') }}
                         </span>
                         <p class="text-2xl font-black text-emerald-700 mt-0.5">{{ $presentCount }}</p>
                     </div>
@@ -99,7 +99,7 @@
                     <div>
                         <span class="text-xs font-bold text-rose-800 flex items-center gap-1.5">
                             <span class="h-2 w-2 rounded-full bg-rose-600"></span>
-                            {{ __('Absents') }} (Rouge)
+                            {{ __('Absents') }}
                         </span>
                         <p class="text-2xl font-black text-rose-700 mt-0.5">{{ $absentCount }}</p>
                     </div>
@@ -113,7 +113,7 @@
                     <div>
                         <span class="text-xs font-bold text-amber-800 flex items-center gap-1.5">
                             <span class="h-2 w-2 rounded-full bg-amber-500"></span>
-                            {{ __('En retard') }} (Jaune)
+                            {{ __('En retard') }}
                         </span>
                         <p class="text-2xl font-black text-amber-700 mt-0.5">{{ $lateCount }}</p>
                     </div>
@@ -148,16 +148,16 @@
                                 {{ \Illuminate\Support\Carbon::parse($attendanceDate)->locale(app()->getLocale())->translatedFormat('l d F Y') }}
                             </span>
                         </h3>
-                        <p class="text-xs text-slate-500 mt-0.5">{{ __('Visualisation claire des statuts : présent en vert, absent en rouge, retard en jaune.') }}</p>
+
                     </div>
 
                     @can('attendance.manage')
                     <div class="flex items-center gap-2">
                         <button type="button" onclick="setAllStatus('present')" class="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition active:scale-95">
-                            {{ __('Tous Présents (Vert)') }}
+                            {{ __('Tous Présents') }}
                         </button>
                         <button type="button" onclick="setAllStatus('absent')" class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition active:scale-95">
-                            {{ __('Tous Absents (Rouge)') }}
+                            {{ __('Tous Absents') }}
                         </button>
                     </div>
                     @endcan
