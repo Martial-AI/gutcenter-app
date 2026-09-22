@@ -20,9 +20,14 @@ use Illuminate\View\View;
 
 class AttendanceController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
-        abort_unless(auth()->user()?->can('attendance.view'), 403);
+        if (! auth()->user()?->can('attendance.view')) {
+            return redirect()->back()->with(
+                'permission_denied',
+                __('You do not have permission to view attendance records.')
+            );
+        }
 
         $user = auth()->user();
         $isTeacher = $user->hasRole('Prof');

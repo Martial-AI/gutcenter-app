@@ -103,7 +103,78 @@
                     </div>
                 </div>
             @endif
+
+            @if (session('permission_denied'))
+                <div id="permission-denied-modal"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-labelledby="perm-modal-title"
+                     class="fixed inset-0 z-[200] flex items-center justify-center p-4"
+                     style="background: rgba(0,0,0,.55); backdrop-filter: blur(4px);">
+                    <div class="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-slate-900"
+                         style="animation: perm-pop .25s cubic-bezier(.34,1.56,.64,1) both">
+
+                        {{-- Decorative top bar --}}
+                        <div class="h-2 w-full" style="background: linear-gradient(90deg,#ef4444,#f97316)"></div>
+
+                        <div class="px-8 py-7 text-center">
+                            {{-- Lock icon --}}
+                            <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full"
+                                 style="background: linear-gradient(135deg,#fee2e2,#fecaca)">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600" fill="none"
+                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                          d="M16.5 10.5V7a4.5 4.5 0 00-9 0v3.5M5 10.5h14A1.5 1.5 0 0120.5 12v7A1.5 1.5 0 0119 20.5H5A1.5 1.5 0 013.5 19v-7A1.5 1.5 0 015 10.5z"/>
+                                </svg>
+                            </div>
+
+                            <h2 id="perm-modal-title"
+                                class="text-xl font-bold text-slate-900 dark:text-white">
+                                {{ __('Access Restricted') }}
+                            </h2>
+
+                            <p class="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+                                {{ session('permission_denied') }}
+                            </p>
+
+                            <p class="mt-2 text-xs text-slate-400 dark:text-slate-500">
+                                {{ __('Contact your administrator to request access to this section.') }}
+                            </p>
+
+                            <div class="mt-6 flex justify-center gap-3">
+                                <button type="button"
+                                        onclick="document.getElementById('permission-denied-modal').remove()"
+                                        class="inline-flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:opacity-90 active:scale-95"
+                                        style="background: linear-gradient(135deg,#ef4444,#f97316)">
+                                    {{ __('Understood') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <style>
+                    @keyframes perm-pop {
+                        from { opacity: 0; transform: scale(.88) translateY(12px); }
+                        to   { opacity: 1; transform: scale(1) translateY(0); }
+                    }
+                </style>
+                <script>
+                    // Close on backdrop click
+                    document.getElementById('permission-denied-modal')
+                        .addEventListener('click', function(e) {
+                            if (e.target === this) this.remove();
+                        });
+                    // Close on Escape key
+                    document.addEventListener('keydown', function esc(e) {
+                        if (e.key === 'Escape') {
+                            const m = document.getElementById('permission-denied-modal');
+                            if (m) { m.remove(); document.removeEventListener('keydown', esc); }
+                        }
+                    });
+                </script>
+            @endif
         </div>
+
         <script>
             document.querySelectorAll('input[type="password"]').forEach(function (input) {
                 const parent = input.parentElement;

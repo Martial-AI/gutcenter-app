@@ -18,9 +18,14 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class SchoolFeeController extends Controller
 {
-    public function index(Request $request, SchoolFeeStatusService $feeStatus, RegistrationFeeService $registrationFees): View
+    public function index(Request $request, SchoolFeeStatusService $feeStatus, RegistrationFeeService $registrationFees): View|RedirectResponse
     {
-        abort_unless(auth()->user()?->can('payments.view'), 403);
+        if (! auth()->user()?->can('payments.view')) {
+            return redirect()->back()->with(
+                'permission_denied',
+                __('You do not have permission to view school fees.')
+            );
+        }
 
         $month = Carbon::createFromFormat('Y-m', $request->string('month')->toString() ?: now()->format('Y-m'))->startOfMonth();
         $search = trim($request->string('search')->toString());

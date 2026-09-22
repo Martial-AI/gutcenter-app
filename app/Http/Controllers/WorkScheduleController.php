@@ -16,9 +16,14 @@ class WorkScheduleController extends Controller
         abort_unless(auth()->user()?->can('roles.manage'), 403);
     }
 
-    public function index(): View
+    public function index(): View|RedirectResponse
     {
-        $this->authorizeAdmin();
+        if (! auth()->user()?->can('roles.manage')) {
+            return redirect()->back()->with(
+                'permission_denied',
+                __('You do not have permission to access schedules.')
+            );
+        }
 
         $schedules = WorkSchedule::orderBy('day_of_week')->orderBy('starts_at')->get();
 

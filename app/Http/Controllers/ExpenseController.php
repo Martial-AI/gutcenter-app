@@ -20,9 +20,14 @@ class ExpenseController extends Controller
      * Display the expense ledger, including salary payments already recorded
      * through the account-management screen.
      */
-    public function index(ExpenseService $expenses): View
+    public function index(ExpenseService $expenses): View|RedirectResponse
     {
-        abort_unless(auth()->user()?->can('expenses.view'), 403);
+        if (! auth()->user()?->can('expenses.view')) {
+            return redirect()->back()->with(
+                'permission_denied',
+                __('You do not have permission to view expenses.')
+            );
+        }
 
         // Salary payments are expenses as well. Synchronising here also brings
         // payments created before the expenses screen was introduced into the
