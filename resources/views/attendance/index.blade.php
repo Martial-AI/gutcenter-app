@@ -553,7 +553,7 @@
     </div>
 
     <!-- Details Modal (Ajax per Person) -->
-    <div id="details-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+    <div id="details-modal" class="fixed inset-0 z-50 hidden items-center justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm">
         <div class="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
             <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/70">
                 <div class="flex items-center gap-3">
@@ -604,7 +604,7 @@
 
     <!-- Manual Attendance Entry Modal -->
     @can('attendance.manage')
-    <div id="manual-attendance-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+    <div id="manual-attendance-modal" class="fixed inset-0 z-50 hidden items-center justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm">
         <div class="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
             <form method="POST" action="{{ route('attendance.store') }}">
                 @csrf
@@ -1092,11 +1092,30 @@
             }
         }
 
+        // ── Scroll-lock helpers ───────────────────────────────────────────────
+        let _scrollLockCount = 0;
+        function lockScroll() {
+            _scrollLockCount++;
+            if (_scrollLockCount === 1) {
+                document.body.style.overflow = 'hidden';
+                document.body.style.paddingRight = (window.innerWidth - document.documentElement.clientWidth) + 'px';
+            }
+        }
+        function unlockScroll() {
+            _scrollLockCount = Math.max(0, _scrollLockCount - 1);
+            if (_scrollLockCount === 0) {
+                document.body.style.overflow = '';
+                document.body.style.paddingRight = '';
+            }
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         function openDeviceSettingsModal() {
             const modal = document.getElementById('device-settings-modal');
             if (!modal) return;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+            lockScroll();
 
             // Pre-fill fields
             const ipInput = document.getElementById('device-ip-input');
@@ -1118,6 +1137,7 @@
             if (!modal) return;
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+            unlockScroll();
         }
 
         function updateDeviceBanner(online) {
@@ -1279,6 +1299,7 @@
             if (!modal) return;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+            lockScroll();
             fetchPointages();
         }
 
@@ -1287,6 +1308,7 @@
             if (!modal) return;
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+            unlockScroll();
         }
 
         function clearPointagesDateFilter() {
@@ -1409,6 +1431,7 @@
             if (!modal) return;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+            lockScroll();
             resetEnrollSelection();
             await loadEnrollData();
         }
@@ -1418,6 +1441,7 @@
             if (!modal) return;
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+            unlockScroll();
             resetEnrollSelection();
         }
 
@@ -1697,7 +1721,7 @@
             }
             if (pwdInput) pwdInput.value = '';
             if (errDiv) { errDiv.textContent = ''; errDiv.classList.add('hidden'); }
-            if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+            if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); lockScroll(); }
             setTimeout(() => { if (pwdInput) pwdInput.focus(); }, 100);
 
             // Close on backdrop click
@@ -1712,7 +1736,7 @@
 
         function closeDeleteFingerprintModal() {
             const modal = document.getElementById('delete-fingerprint-modal');
-            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); unlockScroll(); }
         }
 
         async function confirmDeleteFingerprint() {
@@ -1795,6 +1819,7 @@
             listEl.innerHTML = `<div class="py-8 text-center text-xs text-slate-400">${i18n.retrievingData}</div>`;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+            lockScroll();
 
             try {
                 const response = await fetch(`/attendance/details/${type}/${id}`, {
@@ -1841,6 +1866,7 @@
             const modal = document.getElementById('details-modal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
+            unlockScroll();
         }
 
         function openManualAttendanceModal() {
@@ -1858,6 +1884,7 @@
                 toggleManualTarget();
                 m.classList.remove('hidden');
                 m.classList.add('flex');
+                lockScroll();
             }
         }
 
@@ -1866,6 +1893,7 @@
             if (m) {
                 m.classList.add('hidden');
                 m.classList.remove('flex');
+                unlockScroll();
             }
         }
 
