@@ -2,8 +2,8 @@
     <x-slot name="header">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-                <h2 class="text-xl font-bold tracking-tight text-slate-800">{{ __('Attendance and Statistics') }}</h2>
-                <p class="mt-0.5 text-xs text-slate-500">{{ __('Comprehensive analytics: attendance rates, financial forecasts, student distribution and biometric logs.') }}</p>
+                <h2 class="text-xl font-bold tracking-tight text-slate-800">{{ __('Attendance') }}</h2>
+                <p class="mt-0.5 text-xs text-slate-500">{{ __('Track attendance rates, absence alerts, class statistics and biometric punch logs.') }}</p>
             </div>
             <div class="flex flex-wrap items-center gap-2.5">
                 <span id="device-status-badge" class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200/80 shadow-sm cursor-pointer hover:bg-emerald-100 transition" onclick="openDeviceSettingsModal()" title="{{ __('Click to configure device') }}">
@@ -88,27 +88,8 @@
         </div>
     </x-slot>
 
-    <div class="py-6" x-data="{ mainSection: 'all' }">
+    <div class="py-6">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-6">
-
-            <!-- Section Navigation Pills -->
-            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
-                <div class="flex flex-wrap gap-2">
-                    <button type="button" @click="mainSection = 'all'" :class="mainSection === 'all' ? 'bg-slate-900 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'" class="rounded-xl px-4 py-2 text-xs font-bold transition active:scale-95">
-                        {{ __('Overview') }}
-                    </button>
-                    <button type="button" @click="mainSection = 'attendance'" :class="mainSection === 'attendance' ? 'bg-emerald-700 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'" class="rounded-xl px-4 py-2 text-xs font-bold transition active:scale-95">
-                        {{ __('Attendance and Absences') }}
-                    </button>
-                    <button type="button" @click="mainSection = 'finance'" :class="mainSection === 'finance' ? 'bg-sky-700 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'" class="rounded-xl px-4 py-2 text-xs font-bold transition active:scale-95">
-                        {{ __('Analytics and Financial Projections') }}
-                    </button>
-                </div>
-
-                <div class="text-xs text-slate-500 font-medium">
-                    {{ __('School Capacity') }}: <strong class="text-slate-800">{{ $studentCount }} / {{ $totalCapacity }} ({{ $capacityOccupancyRate }}%)</strong>
-                </div>
-            </div>
 
             <!-- Top Metric Cards Grid (6 Compact Cards) -->
             <div class="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -177,8 +158,8 @@
                         </div>
                     </div>
                     <p class="mt-2 text-2xl font-black tracking-tight text-slate-800">{{ $studentCount }}</p>
-                    <div class="mt-1 text-[11px] text-slate-400">
-                        <span>{{ $capacityOccupancyRate }}% {{ __('of capacity') }}</span>
+                    <div class="mt-1 text-[11px] text-emerald-600 font-semibold">
+                        <span>{{ __('Active students') }}</span>
                     </div>
                 </div>
 
@@ -197,8 +178,8 @@
                 </div>
             </div>
 
-            <!-- SECTION 1: PRESENCE & ABSENCES -->
-            <div x-show="mainSection === 'all' || mainSection === 'attendance'" class="space-y-6">
+            <!-- SECTION: PRESENCE & ABSENCES -->
+            <div class="space-y-6">
 
                 <!-- Filter Bar -->
                 <div class="rounded-2xl bg-white p-4 border border-slate-200/70 shadow-sm">
@@ -567,94 +548,6 @@
                         </div>
                     </div>
                 </div>
-
-            </div>
-
-            <!-- SECTION 2: ANALYTICS & PROJECTIONS FINANCIÈRES / EFFECTIFS -->
-            <div x-show="mainSection === 'all' || mainSection === 'finance'" class="space-y-6 pt-2">
-                <div class="flex items-center justify-between border-b border-slate-200/80 pb-2">
-                    <div>
-                        <h3 class="text-base font-bold text-slate-800">{{ __('Analytics & Financial Projections') }}</h3>
-                        <p class="text-xs text-slate-500">{{ __('Bar charts & circular metrics of future budgets and student distribution.') }}</p>
-                    </div>
-                </div>
-
-                <!-- 1. Diagramme en bâtons - Budgets & Projections Financières -->
-                <div class="rounded-2xl bg-white p-5 border border-slate-200/70 shadow-sm transition hover:shadow-md">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-                        <div>
-                            <h4 class="text-sm font-bold text-slate-800">{{ __('Budget & Financial Forecasts (12 Months)') }}</h4>
-                            <p class="text-xs text-slate-500">{{ __('Historical revenue & expenses vs projected future monthly net balance.') }}</p>
-                        </div>
-                        <div class="flex items-center gap-3 text-xs">
-                            <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span> {{ __('Revenues') }}</span>
-                            <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-rose-500"></span> {{ __('Expenses') }}</span>
-                            <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-sky-500"></span> {{ __('Net Balance Line') }}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="h-60 w-full">
-                        <canvas id="financialForecastChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- 2. Dual Grid: Donut Chart & Line Growth Chart -->
-                <div class="grid gap-6 lg:grid-cols-2">
-                    <!-- Left: Donut Chart - Répartition des Élèves par Classe -->
-                    <div class="rounded-2xl bg-white p-5 border border-slate-200/70 shadow-sm transition hover:shadow-md flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between mb-3">
-                                <div>
-                                    <h4 class="text-sm font-bold text-slate-800">{{ __('Student Distribution by Class') }}</h4>
-                                    <p class="text-xs text-slate-500">{{ __('Breakdown of active students across active classes.') }}</p>
-                                </div>
-                                <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">{{ $classes->count() }} {{ __('Classes') }}</span>
-                            </div>
-
-                            @if($classDistribution->isNotEmpty())
-                                <div class="relative h-56 w-full flex items-center justify-center my-1">
-                                    <canvas id="classDistributionDonutChart"></canvas>
-                                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-                                        <span class="text-xl font-extrabold text-slate-800">{{ $studentCount }}</span>
-                                        <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">{{ __('Students') }}</span>
-                                    </div>
-                                </div>
-                            @else
-                                <div class="flex h-56 items-center justify-center text-xs text-slate-400">
-                                    {{ __('No class distribution data available yet.') }}
-                                </div>
-                            @endif
-                        </div>
-                        
-                        <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                            <span>{{ __('Total Registered Classes') }}: <strong>{{ $classes->count() }}</strong></span>
-                            <span>{{ __('Total Occupancy') }}: <strong>{{ $capacityOccupancyRate }}%</strong></span>
-                        </div>
-                    </div>
-
-                    <!-- Right: Line Chart - Projections d'Évolution des Effectifs -->
-                    <div class="rounded-2xl bg-white p-5 border border-slate-200/70 shadow-sm transition hover:shadow-md flex flex-col justify-between">
-                        <div>
-                            <div class="flex items-center justify-between mb-3">
-                                <div>
-                                    <h4 class="text-sm font-bold text-slate-800">{{ __('Multi-Year Growth & Capacity Forecast') }}</h4>
-                                    <p class="text-xs text-slate-500">{{ __('Historical student numbers & 3-year capacity projections.') }}</p>
-                                </div>
-                                <span class="rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200/60">{{ __('Target Growth') }}</span>
-                            </div>
-
-                            <div class="h-56 w-full my-1">
-                                <canvas id="growthProjectionChart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                            <span>{{ __('School Capacity') }}: <strong>{{ $totalCapacity }}</strong></span>
-                            <span class="text-emerald-700 font-semibold">{{ __('Sustainable Expansion') }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
         </div>
     </div>
@@ -2074,189 +1967,6 @@
                 });
             }
 
-            // 2. Financial Forecast Chart
-            const financialData = @json($financialMonths);
-            const finCtx = document.getElementById('financialForecastChart')?.getContext('2d');
-            if (finCtx && financialData.length > 0) {
-                const labels = financialData.map(item => item.label);
-                const revenues = financialData.map(item => item.revenue);
-                const expenses = financialData.map(item => item.expense);
-                const nets = financialData.map(item => item.net);
-
-                new Chart(finCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: @json(__('Revenues')) + ' (Ar)',
-                                data: revenues,
-                                backgroundColor: 'rgba(16, 185, 129, 0.85)',
-                                borderRadius: 5,
-                                barPercentage: 0.65,
-                                categoryPercentage: 0.6
-                            },
-                            {
-                                label: @json(__('Expenses')) + ' (Ar)',
-                                data: expenses,
-                                backgroundColor: 'rgba(244, 63, 94, 0.85)',
-                                borderRadius: 5,
-                                barPercentage: 0.65,
-                                categoryPercentage: 0.6
-                            },
-                            {
-                                type: 'line',
-                                label: @json(__('Net Balance')) + ' (Ar)',
-                                data: nets,
-                                borderColor: '#0ea5e9',
-                                borderWidth: 2.5,
-                                pointBackgroundColor: '#0284c7',
-                                pointRadius: 3.5,
-                                tension: 0.3,
-                                fill: false
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                padding: 10,
-                                cornerRadius: 8,
-                                callbacks: {
-                                    label: function(ctx) {
-                                        let val = Number(ctx.raw || 0).toLocaleString('fr-FR');
-                                        return `${ctx.dataset.label}: ${val} Ar`;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                grid: { display: false },
-                                ticks: { font: { size: 10 } }
-                            },
-                            y: {
-                                border: { dash: [4, 4] },
-                                grid: { color: '#f1f5f9' },
-                                ticks: {
-                                    font: { size: 10 },
-                                    callback: function(value) {
-                                        return (value / 1000).toLocaleString() + 'k Ar';
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // 3. Class Distribution Donut Chart
-            const classData = @json($classDistribution);
-            const donutCtx = document.getElementById('classDistributionDonutChart')?.getContext('2d');
-            if (donutCtx && classData.length > 0) {
-                const classNames = classData.map(c => c.name);
-                const classCounts = classData.map(c => c.count);
-                const palette = ['#10b981', '#0d9488', '#0ea5e9', '#6366f1', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6'];
-
-                new Chart(donutCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: classNames,
-                        datasets: [{
-                            data: classCounts,
-                            backgroundColor: palette.slice(0, classNames.length),
-                            borderWidth: 2,
-                            borderColor: '#ffffff',
-                            hoverOffset: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '72%',
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    boxWidth: 8,
-                                    usePointStyle: true,
-                                    padding: 10,
-                                    font: { size: 10 }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // 4. Growth Projection Line Chart
-            const projectionData = @json($yearlyProjections);
-            const growthCtx = document.getElementById('growthProjectionChart')?.getContext('2d');
-            if (growthCtx && projectionData.length > 0) {
-                const years = projectionData.map(p => p.year);
-                const studentProj = projectionData.map(p => p.students);
-                const capacityProj = projectionData.map(p => p.capacity);
-
-                new Chart(growthCtx, {
-                    type: 'line',
-                    data: {
-                        labels: years,
-                        datasets: [
-                            {
-                                label: @json(__('Enrolled Students')),
-                                data: studentProj,
-                                borderColor: '#10b981',
-                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                                borderWidth: 2.5,
-                                fill: true,
-                                tension: 0.3,
-                                pointBackgroundColor: '#10b981',
-                                pointRadius: 4
-                            },
-                            {
-                                label: @json(__('School Capacity')),
-                                data: capacityProj,
-                                borderColor: '#94a3b8',
-                                borderWidth: 2,
-                                borderDash: [4, 4],
-                                fill: false,
-                                tension: 0.3,
-                                pointBackgroundColor: '#94a3b8',
-                                pointRadius: 3
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    boxWidth: 10,
-                                    usePointStyle: true,
-                                    padding: 12,
-                                    font: { size: 10 }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                grid: { display: false },
-                                ticks: { font: { size: 10 } }
-                            },
-                            y: {
-                                border: { dash: [4, 4] },
-                                grid: { color: '#f1f5f9' },
-                                ticks: { font: { size: 10 } }
-                            }
-                        }
-                    }
-                });
-            }
         });
     </script>
 </x-app-layout>

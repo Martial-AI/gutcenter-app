@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\TrashController;
 use App\Http\Controllers\TeachingProgramController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\StatisticsController;
 use App\Http\Controllers\BiometricController;
 use App\Http\Controllers\WorkScheduleController;
 use App\Models\Invoice;
@@ -112,7 +113,7 @@ Route::middleware(['auth'])->group(function (): void {
     Route::get('students/scan', [StudentController::class, 'scanQr'])->name('students.scan');
     Route::resource('students', StudentController::class);
     Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
-    Route::get('statistics', [AttendanceController::class, 'index'])->name('statistics.index');
+    Route::get('statistics', [StatisticsController::class, 'index'])->name('statistics.index');
     Route::post('attendance', [AttendanceController::class, 'store'])->name('attendance.store');
     Route::post('attendance/sync-device', [AttendanceController::class, 'syncDevice'])->name('attendance.sync-device');
     Route::get('attendance/details/{type}/{id}', [AttendanceController::class, 'details'])->name('attendance.details');

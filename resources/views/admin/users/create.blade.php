@@ -25,13 +25,61 @@
                 <label>{{ __('Password') }}<input type="password" name="password" required class="mt-1 block w-full rounded border-gray-300"></label>
                 <label>{{ __('Confirm Password') }}<input type="password" name="password_confirmation" required class="mt-1 block w-full rounded border-gray-300"></label>
             </div></section>
-            <fieldset><legend class="font-semibold">{{ __('Additional access') }}</legend><div class="mt-2 grid gap-2 sm:grid-cols-2">@foreach($permissions as $permission)<label class="text-sm"><input type="checkbox" name="permissions[]" value="{{ $permission->name }}" @checked(in_array($permission->name, old('permissions', []), true))> {{ __(config('permissions.labels')[$permission->name] ?? $permission->name) }}</label>@endforeach</div></fieldset>
+            <fieldset><legend class="font-semibold text-slate-800">{{ __('Permissions and Access') }}</legend><p class="text-xs text-slate-500 mb-2">{{ __('Check the accesses to grant to this account. Unchecked options will be hidden and inaccessible.') }}</p><div class="mt-2 grid gap-2 sm:grid-cols-2" id="permissions-grid">@foreach($permissions as $permission)<label class="text-sm"><input type="checkbox" name="permissions[]" value="{{ $permission->name }}" @checked(in_array($permission->name, old('permissions', []), true))> {{ __(config('permissions.labels')[$permission->name] ?? $permission->name) }}</label>@endforeach</div></fieldset>
             <section id="teacher-settings" class="hidden rounded-xl border border-emerald-100 bg-emerald-50 p-4"><h3 class="font-semibold text-emerald-900">{{ __('Teaching assignments') }}</h3><p class="mt-1 text-sm text-emerald-800">{{ __('Choose the classes and enter the subjects taught by this professor.') }}</p><div class="mt-3 grid gap-2 sm:grid-cols-2">@foreach($classes as $class)<label class="text-sm"><input type="checkbox" name="teacher_class_ids[]" value="{{ $class->id }}"> {{ $class->name }}</label>@endforeach</div><label class="mt-4 block text-sm">{{ __('Subjects taught') }}<input name="teaching_subjects" value="{{ old('teaching_subjects') }}" placeholder="{{ __('For example: French, English') }}" class="mt-1 w-full rounded border-gray-300"></label></section>
             <div class="flex gap-3"><button class="rounded bg-emerald-700 px-4 py-2 text-white">{{ __('Create account') }}</button><a href="{{ route('admin.users.index') }}" class="rounded border px-4 py-2">{{ __('Cancel') }}</a></div>
         </form>
     </div>
     <script>document.addEventListener('DOMContentLoaded',()=>{const i=document.querySelector('[name=teaching_subjects]');if(!i)return;const s=document.createElement('select');s.name=i.name+'[]';s.multiple=true;s.className=i.className;s.innerHTML='<option value="">—</option>@foreach($subjects as $subject)<option value="{{ $subject->name }}">{{ $subject->name }}{{ $subject->code ? ' ('.$subject->code.')' : '' }}</option>@endforeach';i.replaceWith(s);});</script>
-    <script>const accountRoleLabels=@json($roleLabels);function updateFunction(){const role=document.getElementById('account-role').value;const first=document.querySelector('[name=first_name]').value.trim();const roleLabel=accountRoleLabels[role]||role;document.getElementById('account-function').value=role==='Admin'?roleLabel:[roleLabel,first].filter(Boolean).join(' ');const isProfRole=(role==='Prof');document.getElementById('emp-non-permanent').checked=isProfRole;document.getElementById('emp-permanent').checked=!isProfRole;}function syncContractEnd(){const type=document.querySelector('[name=contract_type]');const end=document.querySelector('[name=contract_end_date]');end.closest('label').classList.toggle('hidden',type.value==='CDI');if(type.value==='CDI')end.value=''}document.getElementById('account-role').addEventListener('change',updateFunction);document.querySelector('[name=first_name]').addEventListener('input',updateFunction);document.querySelector('[name=contract_type]').addEventListener('change',syncContractEnd);const contractGrid=document.querySelector('[name=contract_type]').closest('.grid');contractGrid.insertAdjacentHTML('beforeend',`<label>{{ __('Monthly salary (Ar)') }}<input type="number" min="0" step="0.01" name="monthly_salary_amount" class="mt-1 block w-full rounded border-gray-300"></label><label>{{ __('Salary payment day') }}<input type="number" min="1" max="31" name="salary_payment_day" value="1" class="mt-1 block w-full rounded border-gray-300"></label>`);updateFunction();syncContractEnd();</script>
+    <script>
+        const accountRoleLabels=@json($roleLabels);
+        const hasOldPermissions = @json(session()->hasOldInput('permissions'));
+        const rolePermissionsPresets = {
+            'Prof': ['attendance.view', 'attendance.manage', 'students.view', 'students.follow', 'programs.view', 'programs.manage'],
+            'Secrétaire': ['students.view', 'students.create', 'students.update', 'classes.manage'],
+            'Trésorier': ['students.view', 'payments.view', 'payments.manage', 'payments.remind', 'expenses.view', 'expenses.create', 'expenses.update'],
+            'Directeur General': ['dashboard.view', 'students.view', 'students.create', 'students.update', 'classes.manage', 'subjects.manage', 'attendance.view', 'payments.view', 'expenses.view', 'programs.view']
+        };
+
+        function applyRolePermissionsPreset(role) {
+            if (hasOldPermissions) return;
+            const preset = rolePermissionsPresets[role] || [];
+            document.querySelectorAll('#permissions-grid input[name="permissions[]"]').forEach(box => {
+                box.checked = preset.includes(box.value);
+            });
+        }
+
+        function updateFunction(){
+            const role=document.getElementById('account-role').value;
+            const first=document.querySelector('[name=first_name]').value.trim();
+            const roleLabel=accountRoleLabels[role]||role;
+            document.getElementById('account-function').value=role==='Admin'?roleLabel:[roleLabel,first].filter(Boolean).join(' ');
+            const isProfRole=(role==='Prof');
+            document.getElementById('emp-non-permanent').checked=isProfRole;
+            document.getElementById('emp-permanent').checked=!isProfRole;
+        }
+
+        function syncContractEnd(){
+            const type=document.querySelector('[name=contract_type]');
+            const end=document.querySelector('[name=contract_end_date]');
+            end.closest('label').classList.toggle('hidden',type.value==='CDI');
+            if(type.value==='CDI')end.value='';
+        }
+
+        document.getElementById('account-role').addEventListener('change', (e) => {
+            updateFunction();
+            applyRolePermissionsPreset(e.target.value);
+        });
+        document.querySelector('[name=first_name]').addEventListener('input',updateFunction);
+        document.querySelector('[name=contract_type]').addEventListener('change',syncContractEnd);
+        const contractGrid=document.querySelector('[name=contract_type]').closest('.grid');
+        contractGrid.insertAdjacentHTML('beforeend',`<label>{{ __('Monthly salary (Ar)') }}<input type="number" min="0" step="0.01" name="monthly_salary_amount" class="mt-1 block w-full rounded border-gray-300"></label><label>{{ __('Salary payment day') }}<input type="number" min="1" max="31" name="salary_payment_day" value="1" class="mt-1 block w-full rounded border-gray-300"></label>`);
+        updateFunction();
+        syncContractEnd();
+        if (!hasOldPermissions) {
+            applyRolePermissionsPreset(document.getElementById('account-role').value);
+        }
+    </script>
 <div id="account-photo-choice" class="fixed inset-0 z-[160] hidden items-center justify-center bg-black/60 p-4"><div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl"><div class="flex items-center justify-between"><h3 class="text-lg font-semibold">{{ __('Add a photo') }}</h3><button type="button" onclick="closeAccountPhotoChoice()" class="rounded-lg px-3 py-1 text-slate-500">{{ __('Close') }}</button></div><p class="mt-2 text-sm text-slate-600">{{ __('Choose the source of the student photo.') }}</p><div class="mt-5 grid gap-3"><button id="account-photo-camera" type="button" class="rounded-xl bg-emerald-700 px-4 py-3 font-medium text-white">{{ __('Camera') }}</button><button id="account-photo-file" type="button" class="rounded-xl border border-slate-300 px-4 py-3 font-medium text-slate-700">{{ __('Choose a file') }}</button></div></div></div>
 <div id="account-camera" class="fixed inset-0 z-[170] hidden items-start justify-center overflow-y-auto bg-black/65 px-4 py-6 sm:items-center"><div class="my-auto w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl"><div class="relative h-56 bg-slate-950"><button type="button" onclick="closeAccountCamera()" class="absolute right-3 top-3 z-10 rounded-full bg-black/70 px-3 py-1.5 text-xs text-white">{{ __('Close') }}</button><video id="account-video" class="h-full w-full object-cover" autoplay playsinline muted></video><img id="account-preview" class="hidden h-full w-full object-cover" alt="{{ __('Captured photo') }}"></div><div class="flex min-h-[110px] items-center justify-center gap-4 bg-white p-4"><button id="account-capture" type="button" aria-label="{{ __('Capture') }}" class="h-16 w-16 rounded-full border-4 border-emerald-100 bg-emerald-700 shadow-lg"></button><div id="account-review" class="hidden gap-3"><button type="button" onclick="retryAccountPhoto()" class="rounded-lg border border-slate-300 px-4 py-2 text-sm">{{ __('Retry') }}</button><button type="button" onclick="saveAccountPhoto()" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm text-white">{{ __('Save') }}</button></div></div></div></div><canvas id="account-canvas" class="hidden"></canvas>
 <script>

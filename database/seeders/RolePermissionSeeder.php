@@ -40,10 +40,10 @@ class RolePermissionSeeder extends Seeder
 
         $roles = [
             'Admin' => $permissions,
-            'Prof' => ['dashboard.view', 'students.view', 'students.follow', 'attendance.view', 'attendance.manage', 'programs.view', 'programs.manage'],
-            'Secrétaire' => ['dashboard.view', 'statistics.view', 'students.view', 'students.create', 'students.update', 'classes.manage'],
-            'Trésorier' => ['dashboard.view', 'statistics.view', 'students.view', 'payments.view', 'payments.manage', 'payments.remind', 'expenses.view', 'expenses.create', 'expenses.update'],
-            'Directeur General' => $permissions,
+            'Prof' => [],
+            'Secrétaire' => [],
+            'Trésorier' => [],
+            'Directeur General' => [],
         ];
 
         foreach ($roles as $name => $rolePermissions) {

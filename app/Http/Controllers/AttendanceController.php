@@ -22,7 +22,84 @@ class AttendanceController extends Controller
 {
     public function index(Request $request): View
     {
-        abort_unless(auth()->user()?->can('statistics.view') || auth()->user()?->can('attendance.view'), 403);
+        abort_unless(auth()->user()?->can('attendance.view'), 403);
+
+        $user = auth()->user();
+        $isTeacher = $user->hasRole('Prof');
+
+        if ($isTeacher) {
+            $teacherAssignments = $user->teacherAssignments()->with(['schoolClass', 'subject'])->get();
+            $assignedClassIds = $teacherAssignments->pluck('school_class_id')->unique()->filter()->all();
+            $assignedSubjectIds = $teacherAssignments->pluck('subject_id')->unique()->filter()->all();
+
+            $classes = SchoolClass::whereIn('id', $assignedClassIds)->orderBy('name')->get();
+            $subjects = Subject::whereIn('id', $assignedSubjectIds)->orderBy('name')->get();
+            if ($subjects->isEmpty()) {
+                $subjects = Subject::where('is_active', true)->orderBy('name')->get();
+            }
+
+            $selectedClassId = $request->input('class_id') ? (int) $request->input('class_id') : ($classes->first()?->id ?? null);
+            if ($selectedClassId && ! in_array($selectedClassId, $assignedClassIds, true)) {
+                $selectedClassId = $classes->first()?->id ?? null;
+            }
+
+            $selectedSubjectId = $request->input('subject_id') ? (int) $request->input('subject_id') : null;
+            $attendanceDate = $request->input('attendance_date') ?: ($request->input('date') ?: now()->toDateString());
+
+            $students = collect();
+            if ($selectedClassId) {
+                $students = Student::whereHas('enrollments', function ($q) use ($selectedClassId) {
+                    $q->where('school_class_id', $selectedClassId)->where('status', 'active');
+                })->orderBy('last_name')->orderBy('first_name')->get();
+            }
+
+            $sessionQuery = AttendanceSession::where('school_class_id', $selectedClassId)
+                ->where('attendance_date', $attendanceDate);
+            if ($selectedSubjectId) {
+                $sessionQuery->where('subject_id', $selectedSubjectId);
+            }
+            $session = $sessionQuery->first();
+
+            $attendancesMap = $session ? $session->attendances()->whereNotNull('student_id')->get()->keyBy('student_id') : collect();
+
+            $teacherStudentsList = $students->map(function ($student) use ($attendancesMap) {
+                $att = $attendancesMap->get($student->id);
+                return [
+                    'id' => $student->id,
+                    'name' => $student->first_name.' '.$student->last_name,
+                    'first_name' => $student->first_name,
+                    'last_name' => $student->last_name,
+                    'student_number' => $student->student_number,
+                    'photo_url' => $student->photo_path ? route('students.photo', $student) : null,
+                    'status' => $att ? $att->status : null,
+                    'effective_status' => $att ? $att->status : 'unrecorded',
+                    'note' => $att?->note,
+                    'checked_at' => $att?->checked_at,
+                ];
+            });
+
+            $presentCount = $teacherStudentsList->where('status', 'present')->count();
+            $absentCount = $teacherStudentsList->where('status', 'absent')->count();
+            $lateCount = $teacherStudentsList->where('status', 'late')->count();
+            $unrecordedCount = $teacherStudentsList->whereNull('status')->count();
+            $totalCount = $teacherStudentsList->count();
+
+            return view('attendance.teacher', compact(
+                'isTeacher',
+                'classes',
+                'subjects',
+                'selectedClassId',
+                'selectedSubjectId',
+                'attendanceDate',
+                'session',
+                'teacherStudentsList',
+                'presentCount',
+                'absentCount',
+                'lateCount',
+                'unrecordedCount',
+                'totalCount'
+            ));
+        }
 
         $selectedClassId = $request->input('class_id') ? (int) $request->input('class_id') : null;
         $dateFrom = $request->input('date_from') ? Carbon::parse($request->input('date_from'))->startOfDay() : null;
@@ -85,7 +162,7 @@ class AttendanceController extends Controller
             ];
         });
 
-        // Flagged Students: 3 or more absences (Suivre cet élève)
+        // Flagged Students: 3 or more absences
         $flaggedStudentsRaw = Attendance::whereNotNull('student_id')
             ->where('status', 'absent')
             ->selectRaw('student_id, COUNT(*) as total_absences')
@@ -131,17 +208,6 @@ class AttendanceController extends Controller
                 'recent_absences' => $records,
             ];
         })->values();
-
-        // Notify admins if new flagged student alerts exist
-        foreach ($flaggedStudents as $item) {
-            $key = 'alert-student-absence-3-'.$item['student']->id;
-            if (cache()->add($key, true, now()->addDays(7))) {
-                SensitiveActivityNotifier::send(
-                    'Alerte : Élève à suivre',
-                    $item['student']->first_name.' '.$item['student']->last_name.' ('.$item['class_name'].') a accumulé '.$item['total_absences'].' absences.'
-                );
-            }
-        }
 
         // Student List with Absence Summaries
         $studentQuery = Student::with(['enrollments.schoolClass']);
@@ -199,57 +265,13 @@ class AttendanceController extends Controller
         });
 
         $subjects = Subject::where('is_active', true)->orderBy('name')->get();
-        $biometricLogs = BiometricEvent::latest()->take(20)->get();
-
-        // Dashboard Analytics Integration: Class Distribution, Financial Projections & Capacity
         $studentCount = Student::count();
         $teacherCount = User::role('Prof')->count();
-        $staffCount = User::role(['Secrétaire', 'Trésorier', 'Directeur General'])->count();
+        $biometricLogs = collect(); // Placeholder; populated via biometric terminal integration if available
 
-        $classDistribution = $classes->map(fn ($c) => [
-            'name' => $c->name,
-            'count' => $c->enrollments_count,
-            'capacity' => (int) ($c->capacity ?: 30),
-        ])->values();
-
-        $totalCapacity = $classes->sum('capacity') ?: 0;
-        $capacityOccupancyRate = $totalCapacity > 0 ? min(100, round(($studentCount / $totalCapacity) * 100, 1)) : 0.0;
-
-        // Monthly Financial Trends (Real database records)
-        $financialMonths = collect();
-        $startDate = now()->subMonths(5)->startOfMonth();
-        for ($i = 0; $i < 12; $i++) {
-            $monthCarbon = $startDate->copy()->addMonths($i);
-            $isFuture = $monthCarbon->isAfter(now()->endOfMonth());
-
-            $rev = (float) StudentMonthlyFee::whereYear('fee_month', $monthCarbon->year)
-                ->whereMonth('fee_month', $monthCarbon->month)
-                ->whereNotNull('paid_at')
-                ->sum('amount');
-            
-            $exp = (float) Expense::whereYear('created_at', $monthCarbon->year)
-                ->whereMonth('created_at', $monthCarbon->month)
-                ->sum('amount');
-
-            $financialMonths->push([
-                'label' => $monthCarbon->locale(app()->getLocale())->translatedFormat('M Y'),
-                'is_projection' => $isFuture,
-                'revenue' => $rev,
-                'expense' => $exp,
-                'net' => $rev - $exp,
-            ]);
-        }
-
-        // Multi-Year Growth & Capacity Projections
-        $currentYear = now()->year;
-        $yearlyProjections = collect([
-            ['year' => (string) ($currentYear - 1), 'students' => $studentCount, 'capacity' => (int) $totalCapacity],
-            ['year' => (string) $currentYear, 'students' => $studentCount, 'capacity' => (int) $totalCapacity],
-            ['year' => (string) ($currentYear + 1), 'students' => $studentCount, 'capacity' => (int) $totalCapacity],
-            ['year' => (string) ($currentYear + 2), 'students' => $studentCount, 'capacity' => (int) $totalCapacity],
-        ]);
 
         return view('attendance.index', compact(
+            'isTeacher',
             'studentAbsenceRate',
             'studentPresenceRate',
             'staffAbsenceRate',
@@ -266,13 +288,7 @@ class AttendanceController extends Controller
             'selectedClassId',
             'biometricLogs',
             'studentCount',
-            'teacherCount',
-            'staffCount',
-            'classDistribution',
-            'totalCapacity',
-            'capacityOccupancyRate',
-            'financialMonths',
-            'yearlyProjections'
+            'teacherCount'
         ));
     }
 

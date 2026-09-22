@@ -718,7 +718,11 @@
   "Please wait while the system checks for missing attendances.": "Please wait while the system checks for missing attendances.",
   "Check Complete": "Check Complete",
   ":n absence alert(s) sent.": ":n absence alert(s) sent.",
-  "No absences detected for the current time.": "No absences detected for the current time.",
   "An error occurred. Please try again.": "An error occurred. Please try again.",
-  "Create Slot": "Create Slot"
+  "Create Slot": "Create Slot",
+  "Permissions and Access": "Permissions and Access",
+  "Check the accesses to grant to this account. Unchecked options will be hidden and inaccessible.": "Check the accesses to grant to this account. Unchecked options will be hidden and inaccessible.",
+  "Present": "Present",
+  "Absent": "Absent",
+  "Late": "Late"
 }

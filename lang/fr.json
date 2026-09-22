@@ -834,5 +834,15 @@
     ":n absence alert(s) sent.": ":n alerte(s) d'absence envoyée(s).",
     "No absences detected for the current time.": "Aucune absence détectée pour l'horaire actuel.",
     "An error occurred. Please try again.": "Une erreur est survenue. Veuillez réessayer.",
-    "Create Slot": "Créer le créneau"
+    "Create Slot": "Créer le créneau",
+    "Permissions and Access": "Permissions et Accès",
+    "Check the accesses to grant to this account. Unchecked options will be hidden and inaccessible.": "Cochez les accès à accorder à ce compte. Les options décochées seront masquées et inaccessibles.",
+    "Present": "Présent",
+    "Absent": "Absent",
+    "Late": "En retard",
+    "Analytics & Financial Projections": "Analyses et Projections Financières",
+    "Budget & Financial Forecasts (12 Months)": "Budgets et Prévisions Financières (12 mois)",
+    "Historical student numbers & 3-year capacity projections.": "Historique des effectifs et projections de capacité sur 3 ans.",
+    "Historical revenue & expenses vs projected future monthly net balance.": "Recettes et dépenses réelles par rapport au solde net mensuel futur projeté.",
+    "Breakdown of active students across active classes.": "Répartition des élèves inscrits dans les classes actives."
 }
