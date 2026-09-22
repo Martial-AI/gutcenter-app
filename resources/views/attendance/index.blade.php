@@ -553,8 +553,8 @@
     </div>
 
     <!-- Details Modal (Ajax per Person) -->
-    <div id="details-modal" class="fixed inset-0 z-50 hidden items-center justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm">
-        <div class="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div id="details-modal" class="fixed inset-0 z-50 hidden items-start justify-center overflow-y-auto bg-black/40 py-4 px-4 backdrop-blur-sm">
+        <div class="my-auto flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
             <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/70">
                 <div class="flex items-center gap-3">
                     <div id="modal-person-avatar" class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-800 font-bold text-sm">
@@ -604,8 +604,8 @@
 
     <!-- Manual Attendance Entry Modal -->
     @can('attendance.manage')
-    <div id="manual-attendance-modal" class="fixed inset-0 z-50 hidden items-center justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-sm">
-        <div class="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div id="manual-attendance-modal" class="fixed inset-0 z-50 hidden items-start justify-center overflow-y-auto bg-black/40 py-4 px-4 backdrop-blur-sm">
+        <div class="my-auto flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
             <form method="POST" action="{{ route('attendance.store') }}">
                 @csrf
                 <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-emerald-50/60">
@@ -730,8 +730,8 @@
     <!-- ========================================================================= -->
     <!-- MODAL 1: Pointages & Historique Biométrique ZKTeco                        -->
     <!-- ========================================================================= -->
-    <div id="pointages-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-3 sm:p-4 transition-all">
-        <div class="relative w-full max-w-4xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div id="pointages-modal" class="fixed inset-0 z-50 hidden items-start justify-center overflow-y-auto bg-slate-900/60 backdrop-blur-sm py-3 px-3 sm:py-4 sm:px-4 transition-all">
+        <div class="my-auto relative w-full max-w-4xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <!-- Header -->
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-gradient-to-r from-violet-900 via-indigo-900 to-slate-900 text-white">
                 <div class="flex items-center gap-3">
@@ -791,8 +791,8 @@
     <!-- ========================================================================= -->
     <!-- MODAL 2: Ajouter / Enrôler une Empreinte Biométrique                     -->
     <!-- ========================================================================= -->
-    <div id="enroll-fingerprint-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-3 sm:p-4 transition-all">
-        <div class="relative w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div id="enroll-fingerprint-modal" class="fixed inset-0 z-50 hidden items-start justify-center overflow-y-auto bg-slate-900/60 backdrop-blur-sm py-3 px-3 sm:py-4 sm:px-4 transition-all">
+        <div class="my-auto relative w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <!-- Header -->
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white">
                 <div class="flex items-center gap-3">
@@ -900,8 +900,8 @@
     <!-- ========================================================================= -->
     <!-- MODAL 2b: Confirmation suppression empreinte (avec mot de passe)          -->
     <!-- ========================================================================= -->
-    <div id="delete-fingerprint-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-900/70 backdrop-blur-sm p-4 transition-all">
-        <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div id="delete-fingerprint-modal" class="fixed inset-0 z-[60] hidden items-start justify-center overflow-y-auto bg-slate-900/70 backdrop-blur-sm py-4 px-4 transition-all">
+        <div class="my-auto relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <!-- Header -->
             <div class="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-rose-700 via-rose-800 to-rose-900 text-white">
                 <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/20">
@@ -940,8 +940,8 @@
     <!-- ========================================================================= -->
     <!-- MODAL 3: ZKTeco Device Settings / Connection                              -->
     <!-- ========================================================================= -->
-    <div id="device-settings-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-3 sm:p-4">
-        <div class="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden">
+    <div id="device-settings-modal" class="fixed inset-0 z-50 hidden items-start justify-center overflow-y-auto bg-slate-900/60 backdrop-blur-sm py-3 px-3 sm:py-4 sm:px-4">
+        <div class="my-auto relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden">
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-slate-800 to-slate-900 text-white">
                 <div class="flex items-center gap-3">
