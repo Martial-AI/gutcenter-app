@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     <x-slot name="header">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -248,7 +248,7 @@
                                         </div>
                                         <div class="min-w-0">
                                             <p class="text-xs font-bold text-slate-900 truncate">{{ $item['student']->first_name }} {{ $item['student']->last_name }}</p>
-                                            <p class="text-[11px] text-slate-500">{{ $item['class_name'] }} · <span class="font-semibold text-amber-700">{{ $item['total_absences'] }} absences</span></p>
+                                            <p class="text-[11px] text-slate-500">{{ $item['class_name'] }} Â· <span class="font-semibold text-amber-700">{{ $item['total_absences'] }} absences</span></p>
                                         </div>
                                     </div>
                                     <button type="button" onclick="showPersonDetails('student', {{ $item['student']->id }})" class="shrink-0 inline-flex items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-200 transition active:scale-95">
@@ -295,7 +295,7 @@
                                         </div>
                                         <div class="min-w-0">
                                             <p class="text-xs font-bold text-slate-900 truncate">{{ $item['user']->name }}</p>
-                                            <p class="text-[11px] text-slate-500">{{ $item['user']->getRoleNames()->first() ?? 'Prof' }} · <span class="font-semibold text-rose-700">{{ $item['total_absences'] }} {{ __('Absences') }}</span></p>
+                                            <p class="text-[11px] text-slate-500">{{ $item['user']->getRoleNames()->first() ?? 'Prof' }} Â· <span class="font-semibold text-rose-700">{{ $item['total_absences'] }} {{ __('Absences') }}</span></p>
                                         </div>
                                     </div>
                                     <button type="button" onclick="showPersonDetails('staff', {{ $item['user']->id }})" class="shrink-0 inline-flex items-center gap-1 rounded-lg bg-rose-100 px-2.5 py-1.5 text-xs font-semibold text-rose-900 hover:bg-rose-200 transition active:scale-95">
@@ -311,8 +311,8 @@
                         </div>
 
                         <div class="border-t border-slate-100 bg-slate-50/50 px-4 py-2.5 text-[11px] text-slate-500 flex items-center justify-between">
-                            <span>{{ __('Notification Policy') }}: <strong>Alerte immédiate pour chaque absence de professeur</strong></span>
-                            <span class="text-rose-700 font-medium">{{ __('Statut Pédagogique') }}</span>
+                            <span>{{ __('Notification Policy') }}: <strong>Alerte immÃ©diate pour chaque absence de professeur</strong></span>
+                            <span class="text-rose-700 font-medium">{{ __('Statut PÃ©dagogique') }}</span>
                         </div>
                     </div>
                 </div>
@@ -534,7 +534,7 @@
                                                     </span>
                                                 @endif
                                             </td>
-                                            <td class="py-3 px-4 text-slate-500 text-[11px] truncate max-w-xs">{{ $log->error_message ?? __('Pointage biométrique reçu') }}</td>
+                                            <td class="py-3 px-4 text-slate-500 text-[11px] truncate max-w-xs">{{ $log->error_message ?? __('Pointage biomÃ©trique reÃ§u') }}</td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -553,7 +553,7 @@
     </div>
 
     <!-- Details Modal (Ajax per Person) -->
-    <div id="details-modal" class="fixed inset-0 z-50 hidden items-start justify-center overflow-y-auto bg-black/40 py-4 px-4 backdrop-blur-sm">
+    <div id="details-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
         <div class="my-auto flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
             <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/70">
                 <div class="flex items-center gap-3">
@@ -604,7 +604,7 @@
 
     <!-- Manual Attendance Entry Modal -->
     @can('attendance.manage')
-    <div id="manual-attendance-modal" class="fixed inset-0 z-50 hidden items-start justify-center overflow-y-auto bg-black/40 py-4 px-4 backdrop-blur-sm">
+    <div id="manual-attendance-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
         <div class="my-auto flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
             <form method="POST" action="{{ route('attendance.store') }}">
                 @csrf
@@ -728,9 +728,9 @@
     @endcan
 
     <!-- ========================================================================= -->
-    <!-- MODAL 1: Pointages & Historique Biométrique ZKTeco                        -->
+    <!-- MODAL 1: Pointages & Historique BiomÃ©trique ZKTeco                        -->
     <!-- ========================================================================= -->
-    <div id="pointages-modal" class="fixed inset-0 z-50 hidden items-start justify-center overflow-y-auto bg-slate-900/60 backdrop-blur-sm py-3 px-3 sm:py-4 sm:px-4 transition-all">
+    <div id="pointages-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm py-3 px-3 sm:py-4 sm:px-4 transition-all">
         <div class="my-auto relative w-full max-w-4xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <!-- Header -->
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-gradient-to-r from-violet-900 via-indigo-900 to-slate-900 text-white">
@@ -789,9 +789,9 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- MODAL 2: Ajouter / Enrôler une Empreinte Biométrique                     -->
+    <!-- MODAL 2: Ajouter / EnrÃ´ler une Empreinte BiomÃ©trique                     -->
     <!-- ========================================================================= -->
-    <div id="enroll-fingerprint-modal" class="fixed inset-0 z-50 hidden items-start justify-center overflow-y-auto bg-slate-900/60 backdrop-blur-sm py-3 px-3 sm:py-4 sm:px-4 transition-all">
+    <div id="enroll-fingerprint-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm py-3 px-3 sm:py-4 sm:px-4 transition-all">
         <div class="my-auto relative w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <!-- Header -->
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4 bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white">
@@ -858,7 +858,7 @@
                             {{ __('Enrollment instructions') }}:
                         </div>
                         <p class="text-slate-600 dark:text-slate-300">
-                            1. {{ __('Click') }} <strong class="text-emerald-700 dark:text-emerald-400">« {{ __('Start Enrollment') }} »</strong> {{ __('below') }}.<br>
+                            1. {{ __('Click') }} <strong class="text-emerald-700 dark:text-emerald-400">Â« {{ __('Start Enrollment') }} Â»</strong> {{ __('below') }}.<br>
                             2. {{ __('The ID') }} <strong class="font-mono text-emerald-700 dark:text-emerald-300" id="enroll-instruction-id">...</strong> {{ __('will be sent to the ZKTeco terminal') }} (<span class="font-mono" id="enroll-device-ip-instr">...</span>).<br>
                             3. {{ __('The person places their finger') }} <strong>3 {{ __('times') }}</strong> {{ __('on the sensor when the light turns on') }}.
                         </p>
@@ -900,7 +900,7 @@
     <!-- ========================================================================= -->
     <!-- MODAL 2b: Confirmation suppression empreinte (avec mot de passe)          -->
     <!-- ========================================================================= -->
-    <div id="delete-fingerprint-modal" class="fixed inset-0 z-[60] hidden items-start justify-center overflow-y-auto bg-slate-900/70 backdrop-blur-sm py-4 px-4 transition-all">
+    <div id="delete-fingerprint-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-900/70 backdrop-blur-sm py-4 px-4 transition-all">
         <div class="my-auto relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <!-- Header -->
             <div class="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-rose-700 via-rose-800 to-rose-900 text-white">
@@ -920,7 +920,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">{{ __('Confirm with your password') }}</label>
-                    <input type="password" id="delete-fp-password" autocomplete="current-password" placeholder="••••••••" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 outline-none transition">
+                    <input type="password" id="delete-fp-password" autocomplete="current-password" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-rose-400 focus:ring-1 focus:ring-rose-400 outline-none transition">
                     <div id="delete-fp-error" class="hidden mt-2 text-xs text-rose-600 dark:text-rose-400 font-medium"></div>
                 </div>
             </div>
@@ -940,7 +940,7 @@
     <!-- ========================================================================= -->
     <!-- MODAL 3: ZKTeco Device Settings / Connection                              -->
     <!-- ========================================================================= -->
-    <div id="device-settings-modal" class="fixed inset-0 z-50 hidden items-start justify-center overflow-y-auto bg-slate-900/60 backdrop-blur-sm py-3 px-3 sm:py-4 sm:px-4">
+    <div id="device-settings-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm py-3 px-3 sm:py-4 sm:px-4">
         <div class="my-auto relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden">
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-slate-800 to-slate-900 text-white">
@@ -1092,7 +1092,7 @@
             }
         }
 
-        // ── Scroll-lock helpers ───────────────────────────────────────────────
+        // â”€â”€ Scroll-lock helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         let _scrollLockCount = 0;
         function lockScroll() {
             _scrollLockCount++;
@@ -1108,9 +1108,28 @@
                 document.body.style.paddingRight = '';
             }
         }
-        // ─────────────────────────────────────────────────────────────────────
+        // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-        function openDeviceSettingsModal() {
+        /*
+ * ZKTeco modals: attach directly to <body>
+ * so position: fixed is always relative to the browser viewport.
+ */
+document.addEventListener('DOMContentLoaded', function () {
+    [
+        'pointages-modal',
+        'enroll-fingerprint-modal',
+        'delete-fingerprint-modal',
+        'device-settings-modal',
+        'manual-attendance-modal',
+        'details-modal'
+    ].forEach(function (id) {
+        const modal = document.getElementById(id);
+        if (modal && modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+    });
+});
+function openDeviceSettingsModal() {
             const modal = document.getElementById('device-settings-modal');
             if (!modal) return;
             modal.classList.remove('hidden');
@@ -1391,7 +1410,7 @@
                                             <span class="font-bold text-slate-900 dark:text-slate-100 truncate">${rec.name}</span>
                                             <span class="rounded px-2 py-0.5 font-mono text-[11px] font-bold border ${idBadgeColor}">${rec.identifier}</span>
                                         </div>
-                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">${rec.type_label} · <span class="font-medium text-slate-600 dark:text-slate-300">${rec.device}</span></p>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">${rec.type_label} Â· <span class="font-medium text-slate-600 dark:text-slate-300">${rec.device}</span></p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3 shrink-0">
@@ -1621,7 +1640,7 @@
             if (statusDesc) {
                 statusDesc.innerHTML = `
                     <div class="mt-1 space-y-1.5 text-xs text-indigo-950 dark:text-indigo-200">
-                        <p class="font-bold text-xs text-indigo-700 dark:text-indigo-300 animate-pulse">👉 ${i18n.placeFinger3Times}</p>
+                        <p class="font-bold text-xs text-indigo-700 dark:text-indigo-300 animate-pulse">ðŸ‘‰ ${i18n.placeFinger3Times}</p>
                         <p class="text-[11px] text-slate-600 dark:text-slate-400">${i18n.sensorLightsUp}</p>
                     </div>
                 `;
@@ -1850,7 +1869,7 @@
                                     <span class="font-bold text-slate-800">${rec.subject_name}</span>
                                     <span class="rounded px-2 py-0.5 text-[10px] font-bold ${badgeClass}">${rec.status_label}</span>
                                 </div>
-                                <p class="mt-1 text-[11px] text-slate-500">${rec.date} ${rec.time && rec.time !== '—' ? '· ' + rec.time : ''} · ${i18n.classLabel}: ${rec.class_name} · ${i18n.methodLabel}: <span class="font-medium">${rec.method}</span></p>
+                                <p class="mt-1 text-[11px] text-slate-500">${rec.date} ${rec.time && rec.time !== 'â€”' ? 'Â· ' + rec.time : ''} Â· ${i18n.classLabel}: ${rec.class_name} Â· ${i18n.methodLabel}: <span class="font-medium">${rec.method}</span></p>
                             </div>
                             <span class="text-[10px] text-slate-400">${rec.recorded_by}</span>
                         </div>
@@ -1998,3 +2017,8 @@
         });
     </script>
 </x-app-layout>
+
+
+
+
+
