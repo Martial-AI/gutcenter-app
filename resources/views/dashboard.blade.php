@@ -3,12 +3,12 @@
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h2 class="text-xl font-bold tracking-tight text-slate-800">{{ __('Dashboard') }}</h2>
-                <p class="mt-0.5 text-xs text-slate-500">{{ __('Overview of your school management key metrics & financial projections.') }}</p>
+                <p class="mt-0.5 text-xs text-slate-500">{{ __('Overview of your school management key metrics and financial projections.') }}</p>
             </div>
             <div class="flex items-center gap-2">
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200/80">
                     <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    {{ __('Live Data & Forecasts') }}
+                    {{ __('Live Data and Forecasts') }}
                 </span>
             </div>
         </div>
@@ -57,7 +57,7 @@
                     </div>
                     <p class="mt-2 text-2xl font-extrabold tracking-tight text-slate-800">{{ $staffCount }}</p>
                     <div class="mt-1 text-[11px] text-slate-400">
-                        <span>{{ __('Management & Secretarial team') }}</span>
+                        <span>{{ __('Management and Secretarial team') }}</span>
                     </div>
                 </div>
                 @endcan
@@ -103,7 +103,7 @@
                     </div>
                     <p class="mt-2 text-xl font-extrabold tracking-tight text-amber-900">{{ number_format($totalExpenses, 0, ',', ' ') }} Ar</p>
                     <div class="mt-1 text-[11px] text-amber-700 font-medium">
-                        <span>{{ __('Operating expenses & salaries') }}</span>
+                        <span>{{ __('Operating expenses and salaries') }}</span>
                     </div>
                 </div>
                 @endcan
@@ -141,7 +141,7 @@
                     <div class="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
                         <div class="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-600 transition-all duration-500" style="width: {{ $attendanceRate }}%"></div>
                     </div>
-                    <p class="mt-1.5 text-[11px] text-slate-400">{{ __('Presence & punctuality percentage') }}</p>
+                    <p class="mt-1.5 text-[11px] text-slate-400">{{ __('Presence and punctuality percentage') }}</p>
                 </div>
             </div>
 
@@ -180,17 +180,17 @@
             <div class="space-y-4 pt-1">
                 <div class="flex items-center justify-between border-b border-slate-200/80 pb-2">
                     <div>
-                        <h3 class="text-base font-bold text-slate-800">{{ __('Analytics & Financial Projections') }}</h3>
-                        <p class="text-xs text-slate-500">{{ __('Bar charts & circular metrics of future budgets and student distribution.') }}</p>
+                        <h3 class="text-base font-bold text-slate-800">{{ __('Analytics and Financial Projections') }}</h3>
+                        <p class="text-xs text-slate-500">{{ __('Bar charts and circular metrics of future budgets and student distribution.') }}</p>
                     </div>
                 </div>
 
-                <!-- 1. Diagramme en bâtons - Budgets & Projections Financières -->
+                <!-- 1. Diagramme en bâtons - Budgets et Projections Financières -->
                 <div class="rounded-xl bg-white p-5 border border-slate-200/60 shadow-sm transition-all hover:shadow-md">
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
                         <div>
-                            <h4 class="text-sm font-bold text-slate-800">{{ __('Budget & Financial Forecasts (12 Months)') }}</h4>
-                            <p class="text-xs text-slate-500">{{ __('Historical revenue & expenses vs projected future monthly net balance.') }}</p>
+                            <h4 class="text-sm font-bold text-slate-800">{{ __('Budget and Financial Forecasts (12 Months)') }}</h4>
+                            <p class="text-xs text-slate-500">{{ __('Historical revenue and expenses vs projected future monthly net balance.') }}</p>
                         </div>
                         <div class="flex items-center gap-3 text-xs">
                             <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-sm bg-emerald-500"></span> {{ __('Revenues') }}</span>
@@ -204,7 +204,7 @@
                     </div>
                 </div>
 
-                <!-- 2. Dual Grid: Bar Chart & Line Growth Chart -->
+                <!-- 2. Dual Grid: Bar Chart et Line Growth Chart -->
                 <div class="grid gap-4 lg:grid-cols-2">
                     <!-- Left: Bar Chart - Répartition des Élèves par Classe -->
                     <div class="rounded-xl bg-white p-5 border border-slate-200/60 shadow-sm transition-all hover:shadow-md flex flex-col justify-between">
@@ -239,8 +239,8 @@
                         <div>
                             <div class="flex items-center justify-between mb-3">
                                 <div>
-                                    <h4 class="text-sm font-bold text-slate-800">{{ __('Multi-Year Growth & Capacity Forecast') }}</h4>
-                                    <p class="text-xs text-slate-500">{{ __('Historical student numbers & 3-year capacity projections.') }}</p>
+                                    <h4 class="text-sm font-bold text-slate-800">{{ __('Multi-Year Growth and Capacity Forecast') }}</h4>
+                                    <p class="text-xs text-slate-500">{{ __('Historical student numbers and 3-year capacity projections.') }}</p>
                                 </div>
                                 <span class="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200/60">{{ __('Target Growth') }}</span>
                             </div>
