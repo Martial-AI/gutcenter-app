@@ -1,4 +1,4 @@
-﻿<x-app-layout>
+<x-app-layout>
     <x-slot name="header">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -248,7 +248,7 @@
                                         </div>
                                         <div class="min-w-0">
                                             <p class="text-xs font-bold text-slate-900 truncate">{{ $item['student']->first_name }} {{ $item['student']->last_name }}</p>
-                                            <p class="text-[11px] text-slate-500">{{ $item['class_name'] }} Â· <span class="font-semibold text-amber-700">{{ $item['total_absences'] }} absences</span></p>
+                                            <p class="text-[11px] text-slate-500">{{ $item['class_name'] }} · <span class="font-semibold text-amber-700">{{ $item['total_absences'] }} absences</span></p>
                                         </div>
                                     </div>
                                     <button type="button" onclick="showPersonDetails('student', {{ $item['student']->id }})" class="shrink-0 inline-flex items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-200 transition active:scale-95">
@@ -295,7 +295,7 @@
                                         </div>
                                         <div class="min-w-0">
                                             <p class="text-xs font-bold text-slate-900 truncate">{{ $item['user']->name }}</p>
-                                            <p class="text-[11px] text-slate-500">{{ $item['user']->getRoleNames()->first() ?? 'Prof' }} Â· <span class="font-semibold text-rose-700">{{ $item['total_absences'] }} {{ __('Absences') }}</span></p>
+                                            <p class="text-[11px] text-slate-500">{{ $item['user']->getRoleNames()->first() ?? 'Prof' }} · <span class="font-semibold text-rose-700">{{ $item['total_absences'] }} {{ __('Absences') }}</span></p>
                                         </div>
                                     </div>
                                     <button type="button" onclick="showPersonDetails('staff', {{ $item['user']->id }})" class="shrink-0 inline-flex items-center gap-1 rounded-lg bg-rose-100 px-2.5 py-1.5 text-xs font-semibold text-rose-900 hover:bg-rose-200 transition active:scale-95">
@@ -311,8 +311,8 @@
                         </div>
 
                         <div class="border-t border-slate-100 bg-slate-50/50 px-4 py-2.5 text-[11px] text-slate-500 flex items-center justify-between">
-                            <span>{{ __('Notification Policy') }}: <strong>Alerte immÃ©diate pour chaque absence de professeur</strong></span>
-                            <span class="text-rose-700 font-medium">{{ __('Statut PÃ©dagogique') }}</span>
+                            <span>{{ __('Notification Policy') }}: <strong>{{ __('Immediate alert for each teacher absence') }}</strong></span>
+                            <span class="text-rose-700 font-medium">{{ __('Pedagogical Status') }}</span>
                         </div>
                     </div>
                 </div>
@@ -534,7 +534,7 @@
                                                     </span>
                                                 @endif
                                             </td>
-                                            <td class="py-3 px-4 text-slate-500 text-[11px] truncate max-w-xs">{{ $log->error_message ?? __('Pointage biomÃ©trique reÃ§u') }}</td>
+                                            <td class="py-3 px-4 text-slate-500 text-[11px] truncate max-w-xs">{{ $log->error_message ?? __('Biometric punch received') }}</td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -728,7 +728,7 @@
     @endcan
 
     <!-- ========================================================================= -->
-    <!-- MODAL 1: Pointages & Historique BiomÃ©trique ZKTeco                        -->
+    <!-- MODAL 1: Pointages & Historique Biométrique ZKTeco                        -->
     <!-- ========================================================================= -->
     <div id="pointages-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm py-3 px-3 sm:py-4 sm:px-4 transition-all">
         <div class="my-auto relative w-full max-w-4xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -789,7 +789,7 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- MODAL 2: Ajouter / EnrÃ´ler une Empreinte BiomÃ©trique                     -->
+    <!-- MODAL 2: Ajouter / Enrôler une Empreinte Biométrique                     -->
     <!-- ========================================================================= -->
     <div id="enroll-fingerprint-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm py-3 px-3 sm:py-4 sm:px-4 transition-all">
         <div class="my-auto relative w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -1971,14 +1971,14 @@ function openDeviceSettingsModal() {
                         labels: classLabels,
                         datasets: [
                             {
-                                label: '{{ __('Student Presence Rate') }} (%)',
+                                label: @json(__('Student Presence Rate') . ' (%)'),
                                 data: presenceRates,
                                 backgroundColor: '#10b981',
                                 borderRadius: 6,
                                 barPercentage: 0.6,
                             },
                             {
-                                label: '{{ __('Student Absence Rate') }} (%)',
+                                label: @json(__('Student Absence Rate') . ' (%)'),
                                 data: absenceRates,
                                 backgroundColor: '#f59e0b',
                                 borderRadius: 6,

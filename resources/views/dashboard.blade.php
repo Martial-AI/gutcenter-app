@@ -218,11 +218,17 @@
                             </div>
 
                             @if($classDistribution->isNotEmpty())
-                                <div class="relative h-52 w-full flex items-center justify-center my-1">
-                                    <canvas id="classDistributionDonutChart"></canvas>
-                                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-                                        <span class="text-xl font-extrabold text-slate-800">{{ $studentCount }}</span>
-                                        <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider">{{ __('Students') }}</span>
+                                <div class="relative h-60 w-full flex items-center justify-center my-1 overflow-hidden">
+                                    <!-- 3D ambient shadow -->
+                                    <div class="absolute inset-0 m-auto w-44 h-44 rounded-full bg-slate-200/50 blur-xl pointer-events-none -z-0"></div>
+                                    <canvas id="classDistributionDonutChart" class="relative z-10"></canvas>
+                                    <div id="dashboardDonutCenterBadge" style="opacity: 0;"
+                                         class="absolute inset-0 m-auto z-20 pointer-events-none rounded-full flex flex-col items-center justify-center text-center transition-all duration-300
+                                                bg-gradient-to-b from-white via-slate-50 to-slate-100 
+                                                shadow-[0_8px_20px_rgba(15,23,42,0.12),inset_0_3px_5px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.06)] 
+                                                border border-slate-200/90">
+                                        <span class="text-2xl font-black text-slate-800 tracking-tight leading-none drop-shadow-sm">{{ $studentCount }}</span>
+                                        <span class="text-[7px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ __('Students') }}</span>
                                     </div>
                                 </div>
                             @else
@@ -414,10 +420,44 @@
                 const classNames = classData.map(c => c.name);
                 const classCounts = classData.map(c => c.count);
 
-                const palette = [
-                    '#10b981', '#0d9488', '#0ea5e9', '#6366f1', 
-                    '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6'
+                const palette3D = [
+                    { top: '#34d399', bottom: '#059669' }, // Emerald
+                    { top: '#38bdf8', bottom: '#0284c7' }, // Sky
+                    { top: '#818cf8', bottom: '#4f46e5' }, // Indigo
+                    { top: '#fbbf24', bottom: '#d97706' }, // Amber
+                    { top: '#f472b6', bottom: '#db2777' }, // Pink
+                    { top: '#a78bfa', bottom: '#7c3aed' }, // Purple
+                    { top: '#2dd4bf', bottom: '#0d9488' }, // Teal
+                    { top: '#fb7185', bottom: '#e11d48' }, // Rose
+                    { top: '#f97316', bottom: '#c2410c' }, // Orange
                 ];
+
+                const doughnut3DPlugin = {
+                    id: 'dashboardDoughnut3D',
+                    beforeDatasetsDraw(chart) {
+                        const { ctx } = chart;
+                        ctx.save();
+                        ctx.shadowColor = 'rgba(15, 23, 42, 0.20)';
+                        ctx.shadowBlur = 14;
+                        ctx.shadowOffsetX = 0;
+                        ctx.shadowOffsetY = 8;
+                    },
+                    afterDatasetsDraw(chart) {
+                        const { ctx } = chart;
+                        ctx.restore();
+                    },
+                    afterLayout(chart) {
+                        const meta = chart.getDatasetMeta(0);
+                        const badge = document.getElementById('dashboardDonutCenterBadge');
+                        if (meta && meta.data && meta.data[0] && badge) {
+                            const arc = meta.data[0];
+                            const diameter = Math.round(arc.innerRadius * 1.75);
+                            badge.style.width = diameter + 'px';
+                            badge.style.height = diameter + 'px';
+                            badge.style.opacity = '1';
+                        }
+                    }
+                };
 
                 new Chart(donutCtx, {
                     type: 'doughnut',
@@ -425,29 +465,43 @@
                         labels: classNames,
                         datasets: [{
                             data: classCounts,
-                            backgroundColor: palette.slice(0, classNames.length),
-                            borderWidth: 2,
+                            backgroundColor: function(context) {
+                                const chart = context.chart;
+                                const { ctx, chartArea } = chart;
+                                if (!chartArea) return palette3D[context.dataIndex % palette3D.length].bottom;
+                                const idx = context.dataIndex % palette3D.length;
+                                const grad = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                                grad.addColorStop(0, palette3D[idx].top);
+                                grad.addColorStop(1, palette3D[idx].bottom);
+                                return grad;
+                            },
+                            borderWidth: 2.5,
                             borderColor: '#ffffff',
-                            hoverOffset: 5
+                            spacing: 4,
+                            borderRadius: 6,
+                            hoverOffset: 8
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        cutout: '70%',
+                        cutout: '66%',
+                        layout: {
+                            padding: { top: 6, bottom: 6, left: 6, right: 6 }
+                        },
                         plugins: {
                             legend: {
                                 position: 'bottom',
                                 labels: {
-                                    boxWidth: 10,
+                                    boxWidth: 8,
                                     usePointStyle: true,
                                     pointStyle: 'circle',
                                     padding: 12,
-                                    font: { size: 10 }
+                                    font: { size: 10, weight: '600' }
                                 }
                             },
                             tooltip: {
-                                padding: 8,
+                                padding: 10,
                                 cornerRadius: 8,
                                 callbacks: {
                                     label: function(ctx) {
@@ -457,7 +511,8 @@
                                 }
                             }
                         }
-                    }
+                    },
+                    plugins: [doughnut3DPlugin]
                 });
             }
 

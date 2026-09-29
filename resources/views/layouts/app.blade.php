@@ -267,6 +267,38 @@
             });
         </script>
         <script>
+            /* ── Global Alert Modal (replaces native alert()) ── */
+            window.showAlert = (message, type = 'error') => {
+                const cfg = {
+                    error:   { icon: '✕', bg: 'bg-red-100',    text: 'text-red-600',    btn: 'bg-red-600 hover:bg-red-700',    title: @json(__('Action non autorisée')) },
+                    warning: { icon: '!', bg: 'bg-amber-100',  text: 'text-amber-600',  btn: 'bg-amber-500 hover:bg-amber-600', title: @json(__('Attention')) },
+                    info:    { icon: 'i', bg: 'bg-blue-100',   text: 'text-blue-600',   btn: 'bg-blue-600 hover:bg-blue-700',   title: @json(__('Information')) },
+                    success: { icon: '✓', bg: 'bg-emerald-100',text: 'text-emerald-600',btn: 'bg-emerald-600 hover:bg-emerald-700',title: @json(__('Succès')) },
+                };
+                const c = cfg[type] || cfg.error;
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(15,23,42,0.45);backdrop-filter:blur(4px);';
+                overlay.innerHTML = `
+                    <div style="width:100%;max-width:22rem;background:#fff;border-radius:1.25rem;box-shadow:0 25px 60px rgba(15,23,42,0.25);padding:1.75rem;text-align:center;animation:alertSlideIn .22s cubic-bezier(.34,1.56,.64,1);">
+                        <div style="margin:0 auto .25rem;width:3.25rem;height:3.25rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.35rem;font-weight:700;" class="${c.bg} ${c.text}">${c.icon}</div>
+                        <h3 style="margin-top:.85rem;font-size:1.05rem;font-weight:700;color:#0f172a;">${c.title}</h3>
+                        <p style="margin-top:.5rem;font-size:.875rem;color:#475569;line-height:1.55;" data-alert-msg></p>
+                        <button type="button" data-close style="margin-top:1.35rem;width:100%;padding:.6rem 1rem;border-radius:.6rem;border:none;font-size:.875rem;font-weight:600;color:#fff;cursor:pointer;transition:background .15s;" class="${c.btn}">{{ __('OK') }}</button>
+                    </div>`;
+                overlay.querySelector('[data-alert-msg]').textContent = message;
+                const close = () => { overlay.style.opacity = '0'; overlay.style.transition = 'opacity .15s'; setTimeout(() => overlay.remove(), 150); };
+                overlay.querySelector('[data-close]').onclick = close;
+                overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+                document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); } });
+                if (!document.getElementById('_showAlertKeyframes')) {
+                    const s = document.createElement('style'); s.id = '_showAlertKeyframes';
+                    s.textContent = '@keyframes alertSlideIn{from{opacity:0;transform:scale(.88) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}';
+                    document.head.appendChild(s);
+                }
+                document.body.appendChild(overlay);
+            };
+        </script>
+        <script>
             document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('p').forEach((amount) => {
                     if (!/\bAr\s*$/.test(amount.textContent.trim()) || amount.dataset.moneyProtected) return;
