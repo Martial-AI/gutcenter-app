@@ -101,17 +101,12 @@
                             </div>
 
                             @if($classDistribution->isNotEmpty())
-                                <div class="relative h-72 w-full flex items-center justify-center my-1 overflow-hidden">
-                                    <!-- 3D ambient shadow -->
-                                    <div class="absolute inset-0 m-auto w-48 h-48 rounded-full bg-slate-200/50 blur-xl pointer-events-none -z-0"></div>
+                                <div class="relative h-72 w-full flex items-center justify-center my-1">
                                     <canvas id="classDistributionDonutChart" class="relative z-10"></canvas>
                                     <div id="statsDonutCenterBadge" style="opacity: 0;"
-                                         class="absolute inset-0 m-auto z-20 pointer-events-none rounded-full flex flex-col items-center justify-center text-center transition-all duration-300
-                                                bg-gradient-to-b from-white via-slate-50 to-slate-100 
-                                                shadow-[0_8px_20px_rgba(15,23,42,0.12),inset_0_3px_5px_rgba(255,255,255,0.95),inset_0_-3px_5px_rgba(15,23,42,0.06)] 
-                                                border border-slate-200/90">
-                                        <span class="text-2xl font-black text-slate-800 tracking-tight leading-none drop-shadow-sm">{{ $studentCount }}</span>
-                                        <span class="text-[7px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ __('Students') }}</span>
+                                         class="absolute inset-0 m-auto z-20 pointer-events-none rounded-full flex flex-col items-center justify-center text-center bg-white border border-slate-100">
+                                        <span class="text-2xl font-black text-slate-800 tracking-tight leading-none">{{ $studentCount }}</span>
+                                        <span class="text-[7px] font-semibold text-slate-400 uppercase tracking-widest mt-0.5">{{ __('Students') }}</span>
                                     </div>
                                 </div>
                             @else
@@ -300,33 +295,14 @@
             if (donutCtx && classData.length > 0) {
                 const classNames = classData.map(c => c.name);
                 const classCounts = classData.map(c => c.count);
-                
-                const palette3D = [
-                    { top: '#34d399', bottom: '#059669' }, // Emerald
-                    { top: '#38bdf8', bottom: '#0284c7' }, // Sky
-                    { top: '#818cf8', bottom: '#4f46e5' }, // Indigo
-                    { top: '#fbbf24', bottom: '#d97706' }, // Amber
-                    { top: '#f472b6', bottom: '#db2777' }, // Pink
-                    { top: '#a78bfa', bottom: '#7c3aed' }, // Purple
-                    { top: '#2dd4bf', bottom: '#0d9488' }, // Teal
-                    { top: '#fb7185', bottom: '#e11d48' }, // Rose
-                    { top: '#f97316', bottom: '#c2410c' }, // Orange
+
+                const palette = [
+                    '#34d399', '#38bdf8', '#818cf8', '#fbbf24',
+                    '#f472b6', '#a78bfa', '#2dd4bf', '#fb7185', '#f97316'
                 ];
 
-                const doughnut3DPlugin = {
-                    id: 'doughnut3DPlugin',
-                    beforeDatasetsDraw(chart) {
-                        const { ctx } = chart;
-                        ctx.save();
-                        ctx.shadowColor = 'rgba(15, 23, 42, 0.20)';
-                        ctx.shadowBlur = 14;
-                        ctx.shadowOffsetX = 0;
-                        ctx.shadowOffsetY = 8;
-                    },
-                    afterDatasetsDraw(chart) {
-                        const { ctx } = chart;
-                        ctx.restore();
-                    },
+                const centerBadgePlugin = {
+                    id: 'centerBadgePlugin',
                     afterLayout(chart) {
                         const meta = chart.getDatasetMeta(0);
                         const badge = document.getElementById('statsDonutCenterBadge');
@@ -346,21 +322,10 @@
                         labels: classNames,
                         datasets: [{
                             data: classCounts,
-                            backgroundColor: function(context) {
-                                const chart = context.chart;
-                                const { ctx, chartArea } = chart;
-                                if (!chartArea) return palette3D[context.dataIndex % palette3D.length].bottom;
-                                const idx = context.dataIndex % palette3D.length;
-                                const grad = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                                grad.addColorStop(0, palette3D[idx].top);
-                                grad.addColorStop(1, palette3D[idx].bottom);
-                                return grad;
-                            },
-                            borderWidth: 2.5,
+                            backgroundColor: classData.map((_, i) => palette[i % palette.length]),
+                            borderWidth: 2,
                             borderColor: '#ffffff',
-                            spacing: 4,
-                            borderRadius: 6,
-                            hoverOffset: 8
+                            hoverOffset: 6
                         }]
                     },
                     options: {
@@ -393,7 +358,7 @@
                             }
                         }
                     },
-                    plugins: [doughnut3DPlugin]
+                    plugins: [centerBadgePlugin]
                 });
             }
 
