@@ -322,8 +322,8 @@
     @can('roles.manage')<script>document.addEventListener('DOMContentLoaded',()=>{const modal=document.getElementById('trash-empty-modal');const open=()=>{modal.style.cssText='position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;';modal.classList.remove('hidden');modal.classList.add('flex')};window.openEmptyTrashModal=open;const button=[...document.querySelectorAll('#trash-modal .border-t button')].find(item=>item.textContent.trim()==='{{ __('Delete all permanently') }}');if(button)button.onclick=open;});</script>@endcan
     @can('roles.manage')<script>window.closeEmptyTrashModal=()=>{const modal=document.getElementById('trash-empty-modal');modal.style.display='none';modal.classList.add('hidden');modal.classList.remove('flex')};</script>@endcan
 
-    <!-- Chart.js Engine CDN Script -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Chart.js Engine (local asset) -->
+    <script src="{{ asset('js/vendor/chart.umd.min.js') }}"></script>
 
     <!-- Initialisation des Graphiques avec support bilingue -->
     <script>
