@@ -87,9 +87,9 @@
                     </div>
                 </div>
 
-                <!-- 2. Dual Grid: Donut Chart & Line Growth Chart -->
+                <!-- 2. Dual Grid: Bar Chart & Line Growth Chart -->
                 <div class="grid gap-6 lg:grid-cols-2">
-                    <!-- Left: Donut Chart - Répartition des Élèves par Classe -->
+                    <!-- Left: Bar Chart - Répartition des Élèves par Classe -->
                     <div class="rounded-2xl bg-white p-6 border border-slate-200/70 shadow-sm transition hover:shadow-md flex flex-col justify-between">
                         <div>
                             <div class="flex items-center justify-between mb-4">
@@ -101,13 +101,8 @@
                             </div>
 
                             @if($classDistribution->isNotEmpty())
-                                <div class="relative h-72 w-full flex items-center justify-center my-1">
-                                    <canvas id="classDistributionDonutChart" class="relative z-10"></canvas>
-                                    <div id="statsDonutCenterBadge" style="opacity: 0;"
-                                         class="absolute inset-0 m-auto z-20 pointer-events-none rounded-full flex flex-col items-center justify-center text-center bg-white border border-slate-100">
-                                        <span class="text-2xl font-black text-slate-800 tracking-tight leading-none">{{ $studentCount }}</span>
-                                        <span class="text-[7px] font-semibold text-slate-400 uppercase tracking-widest mt-0.5">{{ __('Students') }}</span>
-                                    </div>
+                                <div class="h-64 w-full my-1">
+                                    <canvas id="classDistributionBarChart"></canvas>
                                 </div>
                             @else
                                 <div class="flex h-64 items-center justify-center text-xs text-slate-400">
@@ -289,62 +284,38 @@
                 });
             }
 
-            // 2. Class Distribution Donut Chart
+            // 2. Class Distribution Bar Chart (Diagramme en bâton)
             const classData = @json($classDistribution);
-            const donutCtx = document.getElementById('classDistributionDonutChart')?.getContext('2d');
-            if (donutCtx && classData.length > 0) {
+            const classBarCtx = document.getElementById('classDistributionBarChart')?.getContext('2d');
+            if (classBarCtx && classData.length > 0) {
                 const classNames = classData.map(c => c.name);
                 const classCounts = classData.map(c => c.count);
 
                 const palette = [
-                    '#34d399', '#38bdf8', '#818cf8', '#fbbf24',
-                    '#f472b6', '#a78bfa', '#2dd4bf', '#fb7185', '#f97316'
+                    '#3b82f6', '#0ea5e9', '#06b6d4', '#10b981', '#6366f1',
+                    '#8b5cf6', '#ec4899', '#f59e0b', '#f97316', '#14b8a6'
                 ];
 
-                const centerBadgePlugin = {
-                    id: 'centerBadgePlugin',
-                    afterLayout(chart) {
-                        const meta = chart.getDatasetMeta(0);
-                        const badge = document.getElementById('statsDonutCenterBadge');
-                        if (meta && meta.data && meta.data[0] && badge) {
-                            const arc = meta.data[0];
-                            const diameter = Math.round(arc.innerRadius * 1.75);
-                            badge.style.width = diameter + 'px';
-                            badge.style.height = diameter + 'px';
-                            badge.style.opacity = '1';
-                        }
-                    }
-                };
-
-                new Chart(donutCtx, {
-                    type: 'doughnut',
+                new Chart(classBarCtx, {
+                    type: 'bar',
                     data: {
                         labels: classNames,
                         datasets: [{
+                            label: @json(__('Students')),
                             data: classCounts,
                             backgroundColor: classData.map((_, i) => palette[i % palette.length]),
-                            borderWidth: 2,
-                            borderColor: '#ffffff',
-                            hoverOffset: 6
+                            borderRadius: 6,
+                            borderSkipped: false,
+                            barPercentage: 0.65,
+                            categoryPercentage: 0.7
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        cutout: '66%',
-                        layout: {
-                            padding: { top: 6, bottom: 6, left: 6, right: 6 }
-                        },
                         plugins: {
                             legend: {
-                                position: 'bottom',
-                                labels: {
-                                    boxWidth: 8,
-                                    usePointStyle: true,
-                                    pointStyle: 'circle',
-                                    padding: 12,
-                                    font: { size: 10, weight: '600' }
-                                }
+                                display: false
                             },
                             tooltip: {
                                 padding: 10,
@@ -352,13 +323,32 @@
                                 callbacks: {
                                     label: function(ctx) {
                                         const count = ctx.raw || 0;
-                                        return ` ${ctx.label}: ${count} ` + @json(__('Students'));
+                                        return ` ${count} ` + @json(__('Students'));
                                     }
                                 }
                             }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: false },
+                                ticks: {
+                                    font: { size: 11, weight: '600' },
+                                    color: '#475569'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                border: { dash: [4, 4] },
+                                grid: { color: '#f1f5f9' },
+                                ticks: {
+                                    stepSize: 1,
+                                    precision: 0,
+                                    font: { size: 10 },
+                                    color: '#64748b'
+                                }
+                            }
                         }
-                    },
-                    plugins: [centerBadgePlugin]
+                    }
                 });
             }
 
