@@ -41,8 +41,8 @@ class StatisticsController extends Controller
 
         // Monthly Financial Trends (Past actual records & forward projections)
         $financialMonths = collect();
-        $startDate = now()->subMonths(5)->startOfMonth();
-        for ($i = 0; $i < 12; $i++) {
+        $startDate = now()->subMonths(11)->startOfMonth();
+        for ($i = 0; $i < 18; $i++) {
             $monthCarbon = $startDate->copy()->addMonths($i);
             $isFuture = $monthCarbon->isAfter(now()->endOfMonth());
 

@@ -158,8 +158,8 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
-                                @forelse($financialMonths as $month)
-                                    <tr class="hover:bg-slate-50/80 transition {{ $month['is_projection'] ? 'bg-sky-50/30' : '' }}">
+                                @forelse($financialMonths as $index => $month)
+                                    <tr class="hover:bg-slate-50/80 transition {{ $month['is_projection'] ? 'bg-sky-50/30' : '' }} {{ $index >= 10 ? 'financial-extra-row hidden' : '' }}">
                                         <td class="px-6 py-3.5 font-medium text-slate-800">
                                             {{ $month['label'] }}
                                         </td>
@@ -194,6 +194,23 @@
                             </tbody>
                         </table>
                     </div>
+
+                    @if(count($financialMonths) > 10)
+                        <div class="px-6 py-3.5 bg-slate-50/60 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+                            <span class="text-slate-500 font-medium" id="financialCounterText">
+                                {{ __('Showing') }} <span class="font-semibold text-slate-800">10</span> {{ __('of') }} <span class="font-semibold text-slate-800">{{ count($financialMonths) }}</span> {{ __('months') }}
+                            </span>
+                            <button type="button" 
+                                    id="toggleFinancialRowsBtn"
+                                    onclick="toggleFinancialRows()"
+                                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-emerald-700 bg-white hover:bg-emerald-50 border border-slate-200/90 hover:border-emerald-300 transition-all shadow-sm">
+                                <span id="toggleFinancialRowsText">{{ __('See more') }}</span>
+                                <svg id="toggleFinancialRowsIcon" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                        </div>
+                    @endif
                 </div>
 
             </div>
@@ -204,9 +221,41 @@
     <!-- Chart.js Engine (local asset) -->
     <script src="{{ asset('js/vendor/chart.umd.min.js') }}"></script>
     <script>
+        window.toggleFinancialRows = function() {
+            const extraRows = document.querySelectorAll('.financial-extra-row');
+            const textSpan = document.getElementById('toggleFinancialRowsText');
+            const icon = document.getElementById('toggleFinancialRowsIcon');
+            const counterText = document.getElementById('financialCounterText');
+            if (!extraRows.length) return;
+
+            const isHidden = extraRows[0].classList.contains('hidden');
+
+            extraRows.forEach(row => {
+                if (isHidden) {
+                    row.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+
+            if (isHidden) {
+                if (textSpan) textSpan.textContent = @json(__('See less'));
+                if (icon) icon.classList.add('rotate-180');
+                if (counterText) {
+                    counterText.innerHTML = @json(__('Showing')) + ' <span class="font-semibold text-slate-800">' + @json(count($financialMonths)) + '</span> ' + @json(__('of')) + ' <span class="font-semibold text-slate-800">' + @json(count($financialMonths)) + '</span> ' + @json(__('months'));
+                }
+            } else {
+                if (textSpan) textSpan.textContent = @json(__('See more'));
+                if (icon) icon.classList.remove('rotate-180');
+                if (counterText) {
+                    counterText.innerHTML = @json(__('Showing')) + ' <span class="font-semibold text-slate-800">10</span> ' + @json(__('of')) + ' <span class="font-semibold text-slate-800">' + @json(count($financialMonths)) + '</span> ' + @json(__('months'));
+                }
+            }
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             // 1. Financial Forecast Chart
-            const financialData = @json($financialMonths);
+            const financialData = @json($financialMonths).slice(-12);
             const finCtx = document.getElementById('financialForecastChart')?.getContext('2d');
             if (finCtx && financialData.length > 0) {
                 const labels = financialData.map(item => item.label);
